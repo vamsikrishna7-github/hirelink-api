@@ -70,3 +70,47 @@ def get_user_profile(request):
 
     except (EmployerProfile.DoesNotExist, ConsultancyProfile.DoesNotExist, CandidateProfile.DoesNotExist):
         return Response({"user": user_data, "profile": None, "message": "Profile not found."}, status=404)
+
+
+# yourapp/views.py
+
+from django.contrib.auth import get_user_model
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from accounts.utils import send_password_reset_email
+
+User = get_user_model()
+token_generator = PasswordResetTokenGenerator()
+
+@api_view(['POST'])
+def send_reset_password_email(request):
+    email = request.data.get("email")
+    try:
+        user = User.objects.get(email=email)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = token_generator.make_token(user)
+        send_password_reset_email(user, uid, token)
+        return Response({"message": "Password reset link sent!"})
+    except User.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)
+
+@api_view(['POST'])
+def reset_password(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+
+        if not token_generator.check_token(user, token):
+            return Response({"error": "Invalid or expired token."}, status=400)
+
+        password = request.data.get("password")
+        if not password:
+            return Response({"error": "Password is required."}, status=400)
+
+        user.set_password(password)
+        user.save()
+        return Response({"message": "Password reset successful!"})
+
+    except (User.DoesNotExist, ValueError, TypeError):
+        return Response({"error": "Invalid token or user."}, status=400)
