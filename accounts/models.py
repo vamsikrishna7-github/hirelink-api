@@ -39,7 +39,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['name', 'phone', 'user_type']
 
     def __str__(self):
-        return self.email
+        return self.email or self.name
 
 
 
@@ -52,7 +52,7 @@ class EmployerProfile(models.Model):
     website_url = models.URLField(blank=True, null=True)
 
     def __str__(self):
-        return self.company_name
+        return self.company_name or self.user.name
 
 
 class ConsultancyProfile(models.Model):
@@ -64,7 +64,7 @@ class ConsultancyProfile(models.Model):
     website = models.URLField(blank=True, null=True)
 
     def __str__(self):
-        return self.consultancy_name
+        return self.consultancy_name or self.user.name
 
 
 class CandidateProfile(models.Model):
@@ -76,4 +76,4 @@ class CandidateProfile(models.Model):
     portfolio_website = models.URLField(blank=True, null=True)
 
     def __str__(self):
-        return self.user.name
+        return self.user.name or self.user.name
