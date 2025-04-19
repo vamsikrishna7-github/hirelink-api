@@ -16,8 +16,7 @@ DEBUG = False
 # Update allowed hosts for production
 ALLOWED_HOSTS = [
     'hirelink-api.onrender.com',  # Add your Render.com domain
-    'hirelink-eta.vercel.app',
-    'hirelink-azure.vercel.app',
+    'zyukthi.vercel.app',
     'localhost',
     '127.0.0.1',
 ]
@@ -81,8 +80,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js dev server
-    "https://hirelink-eta.vercel.app/",
-    "hirelink-azure.vercel.app",
+    "https://zyukthi.vercel.app/",
 ]
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
