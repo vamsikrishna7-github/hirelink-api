@@ -80,7 +80,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js dev server
-    "https://zyukthi.vercel.app/",
+    "https://zyukthi.vercel.app",
 ]
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
@@ -175,3 +175,8 @@ EMAIL_USE_SSL = False
 EMAIL_HOST_USER = "contact@vamsikrishna.site"
 EMAIL_HOST_PASSWORD = "MKVEca9WUERn"
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+#Social logins
+GOOGLE_CLIENT_ID = "578224276104-sk0t3bvkn2qerllusiaibg6t0k348g31.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"

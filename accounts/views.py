@@ -114,3 +114,52 @@ def reset_password(request, uidb64, token):
 
     except (User.DoesNotExist, ValueError, TypeError):
         return Response({"error": "Invalid token or user."}, status=400)
+
+
+
+
+# views.py
+import requests
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
+
+User = get_user_model()
+
+class GoogleLoginAPIView(APIView):
+    def post(self, request):
+        access_token = request.data.get("token")
+
+        if not access_token:
+            return Response({"error": "Token is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get user info from Google
+        user_info_url = "https://www.googleapis.com/oauth2/v3/userinfo"
+        response = requests.get(user_info_url, headers={"Authorization": f"Bearer {access_token}"})
+
+        if response.status_code != 200:
+            return Response({"error": "Failed to fetch user info from Google"}, status=400)
+
+        user_data = response.json()
+        email = user_data.get("email")
+        name = user_data.get("name")
+
+        if not email:
+            return Response({"error": "Email not found in Google response"}, status=400)
+
+        # Get or create user
+        user, created = User.objects.get_or_create(email=email, defaults={
+            "name": name or email.split("@")[0],
+            "phone": "0000000000",  # fallback dummy phone
+            "user_type": "candidate",  # default type if you want
+        })
+
+        # Issue JWT
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user_type": user.user_type
+        })

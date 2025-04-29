@@ -1,9 +1,14 @@
 from django.urls import path, include
-from accounts.views import EmployerProfileUpdateView, ConsultancyProfileUpdateView, CandidateProfileUpdateView, get_user_profile, send_reset_password_email, reset_password
+from accounts.views import EmployerProfileUpdateView, ConsultancyProfileUpdateView, CandidateProfileUpdateView, get_user_profile, send_reset_password_email, reset_password, GoogleLoginAPIView
 
 urlpatterns = [
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
+
+
+    #social logins
+    path('auth/google-login/', GoogleLoginAPIView.as_view(), name='google-login'),
+
 
     #profile urls
     path('employer/profile/', EmployerProfileUpdateView.as_view(), name='employer-profile-update'),
