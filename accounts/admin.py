@@ -8,8 +8,8 @@ admin.site.site_title = "HireLink Admin Portal"
 admin.site.index_title = "Welcome to HireLink Admin"
 
 class UserAdmin(BaseUserAdmin):
-    list_display = ('email', 'name', 'phone', 'user_type', 'is_staff', 'is_active')
-    list_filter = ('user_type', 'is_staff', 'is_active')
+    list_display = ('email', 'name', 'phone', 'user_type', 'is_staff', 'is_active', 'is_email_verified', 'is_phone_verified', 'is_verified', 'is_suspended', 'is_deleted')
+    list_filter = ('user_type', 'is_staff', 'is_active', 'is_email_verified', 'is_phone_verified', 'is_verified', 'is_suspended', 'is_deleted')
     search_fields = ('email', 'name', 'phone')
     ordering = ('email',)
     fieldsets = (
