@@ -1,6 +1,7 @@
 from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
+import random
 
 
 def send_password_reset_email(user, uid, token):
@@ -20,3 +21,12 @@ def send_password_reset_email(user, uid, token):
 def health_check(request):
     return JsonResponse({'status': 'ok'}, status=200)
 
+
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+def send_otp_via_email(email, otp):
+    subject = 'Your OTP Verification Code'
+    message = f'Your OTP is {otp}'
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])

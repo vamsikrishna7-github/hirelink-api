@@ -1,5 +1,5 @@
 from django.urls import path, include
-from accounts.views import EmployerProfileUpdateView, ConsultancyProfileUpdateView, CandidateProfileUpdateView, get_user_profile, send_reset_password_email, reset_password, GoogleLoginAPIView
+from accounts.views import EmployerProfileUpdateView, ConsultancyProfileUpdateView, CandidateProfileUpdateView, get_user_profile, send_reset_password_email, reset_password, GoogleLoginAPIView, EmailOTPSendView, VerifyEmailOTPView
 
 urlpatterns = [
     path('auth/', include('djoser.urls')),
@@ -19,4 +19,8 @@ urlpatterns = [
     #password reset urls
     path('auth/request-reset-password/', send_reset_password_email),
     path('auth/reset-password/<uidb64>/<token>/', reset_password),
+
+    #email otp urls
+    path('send-otp/', EmailOTPSendView.as_view(), name='send_otp'),
+    path('verify-otp/', VerifyEmailOTPView.as_view(), name='verify_otp'),
 ]

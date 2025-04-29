@@ -1,7 +1,9 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
 from django.conf import settings
-
+import random
+from django.utils import timezone
+from datetime import timedelta
 class UserManager(BaseUserManager):
     def create_user(self, email, name, phone, user_type, password=None, **extra_fields):
         if not email:
@@ -32,6 +34,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=False)
+    is_phone_verified = models.BooleanField(default=False)
+    is_suspended = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
 
     objects = UserManager()
 
@@ -77,3 +84,12 @@ class CandidateProfile(models.Model):
 
     def __str__(self):
         return self.user.name or self.user.name
+
+
+class EmailOTP(models.Model):
+    email = models.EmailField()
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)

@@ -1,9 +1,13 @@
 from rest_framework.generics import RetrieveUpdateAPIView
-from .models import EmployerProfile, ConsultancyProfile, CandidateProfile, User
+from .models import EmployerProfile, ConsultancyProfile, CandidateProfile, User, EmailOTP
 from .serializers import EmployerProfileSerializer, ConsultancyProfileSerializer, CandidateProfileSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from .utils import generate_otp, send_otp_via_email
+from threading import Thread
+from rest_framework import status
+from rest_framework.views import APIView
 
 
 
@@ -163,3 +167,42 @@ class GoogleLoginAPIView(APIView):
             "access": str(refresh.access_token),
             "user_type": user.user_type
         })
+
+
+#email otp send view
+class EmailOTPSendView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        
+
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'Email already exists'}, status=400)
+
+        otp = generate_otp()
+        EmailOTP.objects.create(email=email, otp=otp)
+        email_thread = Thread(
+            target=send_otp_via_email, args=(email, otp)
+            )
+        email_thread.start()
+
+
+        return Response({'message': 'OTP sent to email'}, status=200)
+
+# views.py
+class VerifyEmailOTPView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        otp = request.data.get('otp')
+
+        try:
+            record = EmailOTP.objects.filter(email=email).latest('created_at')
+            if record.otp == otp and not record.is_expired():
+                # user = User.objects.get(email=email)
+                # user.is_email_verified = True
+                # user.save()
+                record.delete()  # Clean up
+                return Response({'message': 'Email verified successfully'}, status=200)
+            else:
+                return Response({'error': 'Invalid or expired OTP'}, status=400)
+        except EmailOTP.DoesNotExist:
+            return Response({'error': 'OTP not found'}, status=404)
