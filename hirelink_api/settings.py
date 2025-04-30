@@ -16,6 +16,7 @@ DEBUG = False
 # Update allowed hosts for production
 ALLOWED_HOSTS = [
     'hirelink-api.onrender.com',  # Add your Render.com domain
+    'zyukthi-api.onrender.com',
     'zyukthi.vercel.app',
     'localhost',
     '127.0.0.1',
