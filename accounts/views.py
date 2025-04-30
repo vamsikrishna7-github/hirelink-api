@@ -153,20 +153,21 @@ class GoogleLoginAPIView(APIView):
         if not email:
             return Response({"error": "Email not found in Google response"}, status=400)
 
-        # Get or create user
-        user, created = User.objects.get_or_create(email=email, defaults={
-            "name": name or email.split("@")[0],
-            "phone": "0000000000",  # fallback dummy phone
-            "user_type": "candidate",  # default type if you want
-        })
 
-        # Issue JWT
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-            "user_type": user.user_type
-        })
+        try:
+            user = User.objects.get(email=email)
+            # Issue JWT
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "user_type": user.user_type
+            })
+        except User.DoesNotExist:
+            user_data["error"] = "User not found"
+            # print("google login user data: ",user_data);
+            return Response(user_data, status=404)
+
 
 
 #email otp send view
