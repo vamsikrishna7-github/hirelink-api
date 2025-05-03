@@ -6,17 +6,31 @@ from django.template.loader import render_to_string
 
 
 def send_password_reset_email(user, uid, token):
-    reset_link = f"https://zyukthi.vercel.app/reset-password/{uid}/{token}/"  
+    context = {
+        'reset_link': f"https://zyukthi.vercel.app/reset-password/{uid}/{token}/",
+        'recipient_name': user.name or user.email
+    }
     subject = "Reset Your Password"
     message = f"""
     Hi {user.name or user.email},
 
     Please click the link below to reset your password:
-    {reset_link}
+    {context['reset_link']}
 
     If you didn't request this, you can ignore this email.
     """
-    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+    # Render the HTML template
+    html_message = render_to_string('admin/accounts/emails/auto_email_reset_password_link.html', context)
+    
+    # Send the email
+    send_mail(
+        subject=subject,
+        message=message,
+        html_message=html_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        fail_silently=False,
+    )
 
 #health check
 def health_check(request):
