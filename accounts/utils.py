@@ -2,6 +2,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.http import JsonResponse
 import random
+from django.template.loader import render_to_string
 
 
 def send_password_reset_email(user, uid, token):
@@ -26,7 +27,27 @@ def health_check(request):
 def generate_otp():
     return str(random.randint(100000, 999999))
 
-def send_otp_via_email(email, otp):
-    subject = 'Your OTP Verification Code'
-    message = f'Your OTP is {otp}'
-    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+def send_otp_via_email(email, otp, recipient_name="User"):
+    subject = 'Zyukthi - Email Verification'
+    
+    # Ensure OTP is a string and has exactly 6 digits
+    otp = str(otp).zfill(6)
+    
+    # Prepare context for the template
+    context = {
+        'otp': otp,
+        'recipient_name': recipient_name
+    }
+    
+    # Render the HTML template
+    html_message = render_to_string('admin/accounts/emails/auto_email_otp.html', context)
+    
+    # Send the email
+    send_mail(
+        subject=subject,
+        message=f'Your OTP verification code is: {otp}',
+        html_message=html_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        fail_silently=False,
+    )
