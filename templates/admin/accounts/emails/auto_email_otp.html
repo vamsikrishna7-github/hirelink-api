@@ -4,184 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zyukthi - Email Verification</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #2563eb;
-            --primary-light: #3b82f6;
-            --primary-dark: #1d4ed8;
-            --secondary-color: #f8fafc;
-            --text-color: #1e293b;
-            --text-light: #64748b;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --border-radius: 12px;
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             background-color: #f1f5f9;
-            color: var(--text-color);
+            color: #1e293b;
             line-height: 1.6;
             margin: 0;
-            padding: 0;
+            padding: 20px 0;
         }
-
-        /* Container classes */
-        .container {
-            width: 100%;
-            padding-right: 15px;
-            padding-left: 15px;
-            margin-right: auto;
-            margin-left: auto;
-            box-sizing: border-box;
-        }
-
-        @media (min-width: 576px) {
-            .container {
-                max-width: 540px;
-            }
-        }
-
-        @media (min-width: 768px) {
-            .container {
-                max-width: 720px;
-            }
-        }
-
-        @media (min-width: 992px) {
-            .container {
-                max-width: 960px;
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .container {
-                max-width: 1140px;
-            }
-        }
-
-        /* Flexbox classes */
-        .d-flex {
-            display: flex;
-        }
-
-        .justify-content-center {
-            justify-content: center;
-        }
-
-        /* Grid classes */
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            margin-right: -15px;
-            margin-left: -15px;
-        }
-
-        .col {
-            flex-basis: 0;
-            flex-grow: 1;
-            max-width: 100%;
-            padding-right: 15px;
-            padding-left: 15px;
-            box-sizing: border-box;
-        }
-
-        /* Spacing utilities */
-        .py-4 {
-            padding-top: 1.5rem;
-            padding-bottom: 1.5rem;
-        }
-
-        .mt-4 {
-            margin-top: 1.5rem;
-        }
-
-        .mb-0 {
-            margin-bottom: 0;
-        }
-
-        .mb-2 {
-            margin-bottom: 0.5rem;
-        }
-
-        .mb-3 {
-            margin-bottom: 1rem;
-        }
-
-        /* Alert classes */
-        .alert {
-            position: relative;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid transparent;
-            border-radius: var(--border-radius);
-        }
-
-        .alert-warning {
-            color: #856404;
-            background-color: #fff3cd;
-            border-color: #ffeeba;
-        }
-
-        /* Text utilities */
-        .h6 {
-            font-size: 1rem;
-            font-weight: 500;
-            margin-top: 0;
-            margin-bottom: 0.5rem;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        /* Email specific styles */
+        
         .email-container {
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
-            border-radius: var(--border-radius);
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-
+        
+        .banner-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-bottom: 4px solid #2563eb;
+        }
+        
         .header {
-            padding: 40px 20px;
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
             color: white;
             text-align: center;
         }
-
+        
         .logo {
             max-width: 180px;
-            margin-bottom: 20px;
-            transition: transform 0.3s ease;
+            margin-bottom: 15px;
         }
-
-        .logo:hover {
-            transform: scale(1.05);
-        }
-
+        
         .content {
-            padding: 40px;
+            padding: 30px;
         }
-
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', Arial, sans-serif;
+            font-weight: 600;
+        }
+        
         .otp-container {
             background: linear-gradient(135deg, #eff6ff, #dbeafe);
-            padding: 30px;
-            border-radius: var(--border-radius);
-            margin: 30px 0;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
             text-align: center;
             border: 1px solid #dbeafe;
-            width: 100%;
-            box-sizing: border-box;
         }
-
+        
+        .otp-row {
+            display: flex;
+            justify-content: center;
+            margin: 0 auto;
+            max-width: 400px;
+        }
+        
         .otp-digit {
             display: inline-block;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Poppins', Arial, sans-serif;
             font-size: 28px;
             font-weight: 600;
             margin: 0 8px;
@@ -189,119 +77,123 @@
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            color: var(--primary-color);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            color: #2563eb;
             min-width: 50px;
             text-align: center;
         }
-
-        .otp-digit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        
+        .otp-code {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: #2563eb;
+            margin: 15px 0;
         }
-
+        
+        .expiry {
+            font-weight: bold;
+            color: #dc2626;
+        }
+        
+        .alert {
+            border-radius: 12px;
+            padding: 20px;
+            background-color: #fff7ed;
+            color: #92400e;
+            margin-top: 25px;
+        }
+        
         .footer {
-            padding: 30px;
-            background-color: var(--secondary-color);
+            padding: 25px;
+            background-color: #f8fafc;
             font-size: 13px;
-            color: var(--text-light);
+            color: #64748b;
             text-align: center;
             border-top: 1px solid #e2e8f0;
         }
-
+        
+        .footer-links {
+            margin-top: 15px;
+        }
+        
         .footer-links a {
-            color: var(--text-light);
+            color: #64748b;
             text-decoration: none;
-            margin: 0 12px;
-            transition: color 0.2s ease;
+            margin: 0 10px;
         }
-
+        
         .footer-links a:hover {
-            color: var(--primary-color);
+            color: #2563eb;
         }
-
-        .banner-img {
-            width: 100%;
-            height: auto;
-            display: block;
-            border-bottom: 4px solid var(--primary-color);
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-        }
-
+        
         /* Responsive styles */
-        @media (max-width: 576px) {
+        @media (max-width: 600px) {
             .content {
-                padding: 20px 15px;
+                padding: 20px;
             }
             
-            .otp-container {
-                padding: 20px 10px;
-                margin: 20px 0;
+            .otp-code {
+                font-size: 24px;
+                letter-spacing: 4px;
+            }
+            
+            .otp-digit {
+                font-size: 24px;
+                padding: 10px 15px;
+                margin: 0 5px;
+                min-width: 40px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .otp-code {
+                font-size: 20px;
+                letter-spacing: 3px;
             }
             
             .otp-digit {
                 font-size: 20px;
                 padding: 8px 12px;
-                margin: 0 4px;
-                min-width: 40px;
-            }
-        }
-
-        @media (max-width: 341px) {
-            .otp-digit {
-                font-size: 13px;
-                padding: 7px 8px;
-                margin: 0px 3px;
-            }
-        }
-
-        @media (max-width: 328px) {
-            .otp-digit {
-                margin-bottom: 3px;
+                margin: 0 3px;
+                min-width: 30px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container py-4">
-        <div class="email-container">
-            <img src="https://raw.githubusercontent.com/vamsikrishna7-github/hirelink_images/refs/heads/main/Purple%20and%20Green%20Gradient%20Creative%20Industry%20General%20Linkedin%20Banner.jpg" alt="HireLink Logo" class="banner-img">
-
-            <div class="content">
-                <p class="h6">Hi <strong>{{ recipient_name }}</strong>,</p>
-                
-                <p>Here is your One Time Password (OTP) for verifying your email address with Zyukthi:</p>
-                
-                <div class="otp-container">
-                    <div class="d-flex justify-content-center">
-                        {% for digit in otp %}
-                        <span class="otp-digit">{{ digit }}</span>
-                        {% endfor %}
-                    </div>
+    <div class="email-container">
+        <img src="https://raw.githubusercontent.com/vamsikrishna7-github/hirelink_images/refs/heads/main/Purple%20and%20Green%20Gradient%20Creative%20Industry%20General%20Linkedin%20Banner.jpg" alt="Zyukthi Banner" class="banner-img">
+        
+        <div class="content">
+            <p style="font-size: 18px; margin-bottom: 20px;">Hi <strong>{{ recipient_name }}</strong>,</p>
+            
+            <p style="margin-bottom: 20px;">Here is your One Time Password (OTP) for verifying your email address with Zyukthi:</p>
+            
+            <div class="otp-container">
+                <div class="otp-code">
+                    {% for digit in otp %}
+                    {{ digit }}&nbsp; 
+                    {% endfor %}
                 </div>
-                
-                <p>Please enter this code to complete your registration. This OTP will expire in <strong>5 minutes</strong>.</p>
-                
-                <div class="alert alert-warning">
-                    <p class="mb-0">If you didn't request this code, please ignore this email or contact our support team.</p>
-                </div>
-                
-                <p class="mt-4">Best Regards,<br>The <strong>Zyukthi</strong> Team</p>
+                <p>Please enter this code to complete your registration.</p>
+                <p>This OTP will expire in <span class="expiry">10 minutes</span>.</p>
             </div>
-
-            <div class="footer">
-                <p class="mb-2">© 2025 Zyukthi. All rights reserved.</p>
-                <p class="mb-3">You are receiving this email because you registered to join the Zyukthi platform.</p>
-                <div class="footer-links">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                    <a href="#">Help Center</a>
-                    <a href="#">Unsubscribe</a>
-                </div>
+            
+            <div class="alert">
+                <p style="margin: 0;">If you didn't request this code, please ignore this email or contact our support team.</p>
+            </div>
+            
+            <p style="margin-top: 30px;">Best Regards,<br>The <strong>Zyukthi</strong> Team</p>
+        </div>
+        
+        <div class="footer">
+            <p style="margin: 0 0 10px 0;">© 2025 Zyukthi. All rights reserved.</p>
+            <p style="margin: 0 0 15px 0;">You are receiving this email because you registered to join the Zyukthi platform.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Help Center</a>
+                <a href="#">Unsubscribe</a>
             </div>
         </div>
     </div>
