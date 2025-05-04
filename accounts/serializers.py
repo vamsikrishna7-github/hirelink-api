@@ -71,3 +71,28 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['user']
 
+
+# Employer Profile Document Upload Serializer
+class EmployerProfileDocumentUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmployerProfile
+        fields = [
+            'msme_or_incorporation_certificate',
+            'gstin_certificate',
+            'pan_card',
+            'poc_document',
+        ]
+
+# Candidate Profile Document Upload Serializer
+class CandidateProfileDocumentUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CandidateProfile
+        fields = ['resume']
+
+# Consultancy Profile Document Upload Serializer
+class ConsultancyProfileDocumentUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConsultancyProfile
+        fields = ['msme_or_incorporation_certificate', 'gstin_certificate', 'pan_card', 'poc_document']
+
+

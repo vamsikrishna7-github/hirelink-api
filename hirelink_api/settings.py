@@ -1,5 +1,18 @@
 from pathlib import Path
 import os
+from corsheaders.defaults import default_headers
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+# Cloudinary Config (Image Storage)
+cloudinary.config( 
+  cloud_name = "djzsfnsjj",  
+  api_key = "489235114815498",  
+  api_secret = "HKC-xb3NsenxGSB4ChZSidi7J9c"  
+)
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -36,7 +49,7 @@ INSTALLED_APPS = [
     'djoser',
     'accounts',
     'corsheaders',
-
+    'cloudinary',
 ]
 
 SIMPLE_JWT = {

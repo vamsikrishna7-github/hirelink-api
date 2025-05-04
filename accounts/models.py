@@ -35,7 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
-    is_email_verified = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=True)
     is_phone_verified = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
@@ -53,10 +53,17 @@ class User(AbstractBaseUser, PermissionsMixin):
 class EmployerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employer_profile')
     company_name = models.CharField(max_length=255, null=True, blank=True)
+    designation = models.CharField(max_length=255, null=True, blank=True)
     industry = models.CharField(max_length=255, null=True, blank=True)
     company_size = models.CharField(max_length=100, null=True, blank=True)
     company_address = models.TextField(null=True, blank=True)
     website_url = models.URLField(blank=True, null=True)
+
+    # Cloudinary Image Field
+    msme_or_incorporation_certificate = models.URLField(null=True, blank=True)
+    gstin_certificate = models.URLField(null=True, blank=True)
+    pan_card = models.URLField(null=True, blank=True)
+    poc_document = models.URLField(null=True, blank=True)
 
     def __str__(self):
         return self.company_name or self.user.name
@@ -70,6 +77,12 @@ class ConsultancyProfile(models.Model):
     office_address = models.TextField(null=True, blank=True)
     website = models.URLField(blank=True, null=True)
 
+    # Cloudinary Image Field
+    msme_or_incorporation_certificate = models.URLField(null=True, blank=True)
+    gstin_certificate = models.URLField(null=True, blank=True)
+    pan_card = models.URLField(null=True, blank=True)
+    poc_document = models.URLField(null=True, blank=True)
+
     def __str__(self):
         return self.consultancy_name or self.user.name
 
@@ -79,8 +92,10 @@ class CandidateProfile(models.Model):
     education = models.CharField(max_length=255, null=True, blank=True)
     experience_years = models.PositiveIntegerField(null=True, blank=True)
     skills = models.TextField(null=True, blank=True)
-    resume_url = models.URLField(null=True, blank=True)
     portfolio_website = models.URLField(blank=True, null=True)
+
+    # Cloudinary Image Field
+    resume = models.URLField(null=True, blank=True)
 
     def __str__(self):
         return self.user.name or self.user.name

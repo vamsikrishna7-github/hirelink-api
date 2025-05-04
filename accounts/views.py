@@ -1,6 +1,7 @@
+import mimetypes
 from rest_framework.generics import RetrieveUpdateAPIView
 from .models import EmployerProfile, ConsultancyProfile, CandidateProfile, User, EmailOTP
-from .serializers import EmployerProfileSerializer, ConsultancyProfileSerializer, CandidateProfileSerializer
+from .serializers import EmployerProfileSerializer, ConsultancyProfileSerializer, CandidateProfileSerializer, EmployerProfileDocumentUploadSerializer, CandidateProfileDocumentUploadSerializer, ConsultancyProfileDocumentUploadSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -8,6 +9,7 @@ from .utils import generate_otp, send_otp_via_email
 from threading import Thread
 from rest_framework import status
 from rest_framework.views import APIView
+from cloudinary.uploader import upload as cloudinary_upload
 
 
 
@@ -207,3 +209,64 @@ class VerifyEmailOTPView(APIView):
                 return Response({'error': 'Invalid or expired OTP'}, status=400)
         except EmailOTP.DoesNotExist:
             return Response({'error': 'OTP not found'}, status=404)
+
+
+# Employer Profile Document Upload View
+class UploadEmployerDocumentsView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        if user.user_type == 'employer':
+            profile, _ = EmployerProfile.objects.get_or_create(user=user)
+        elif user.user_type == 'consultancy':
+            profile, _ = ConsultancyProfile.objects.get_or_create(user=user)
+        elif user.user_type == 'candidate':
+            profile, _ = CandidateProfile.objects.get_or_create(user=user)
+
+
+        
+        data = {}
+        if user.user_type == 'employer' or user.user_type == 'consultancy':
+            for field in ['msme_or_incorporation_certificate', 'gstin_certificate', 'pan_card', 'poc_document']:
+                file = request.FILES.get(field)
+                content_type, _ = mimetypes.guess_type(file.name)
+                if content_type in ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+                    resource_type = "raw"
+                else:
+                    resource_type = "image"
+                print("resource_type: ",resource_type)
+                if file:
+                    upload_result = cloudinary_upload(file, folder=field, resource_type=resource_type)
+                    data[field] = upload_result.get('secure_url')
+        elif user.user_type == 'candidate':
+            for field in ['resume']:
+                file = request.FILES.get(field)
+                content_type, _ = mimetypes.guess_type(file.name)
+                if content_type in ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+                    resource_type = "raw"
+                else:
+                    resource_type = "image"
+                if file:
+                    upload_result = cloudinary_upload(file, folder=field, resource_type=resource_type)
+                    data[field] = upload_result.get('secure_url')
+
+        if user.user_type == 'employer':
+            serializer = EmployerProfileDocumentUploadSerializer(profile, data=data, partial=True)
+        elif user.user_type == 'consultancy':
+            serializer = ConsultancyProfileDocumentUploadSerializer(profile, data=data, partial=True)
+        elif user.user_type == 'candidate':
+            serializer = CandidateProfileDocumentUploadSerializer(profile, data=data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

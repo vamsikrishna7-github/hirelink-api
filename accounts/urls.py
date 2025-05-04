@@ -1,5 +1,5 @@
 from django.urls import path, include
-from accounts.views import EmployerProfileUpdateView, ConsultancyProfileUpdateView, CandidateProfileUpdateView, get_user_profile, send_reset_password_email, reset_password, GoogleLoginAPIView, EmailOTPSendView, VerifyEmailOTPView
+from accounts.views import EmployerProfileUpdateView, ConsultancyProfileUpdateView, CandidateProfileUpdateView, get_user_profile, send_reset_password_email, reset_password, GoogleLoginAPIView, EmailOTPSendView, VerifyEmailOTPView, UploadEmployerDocumentsView
 
 urlpatterns = [
     path('auth/', include('djoser.urls')),
@@ -23,4 +23,8 @@ urlpatterns = [
     #email otp urls
     path('send-otp/', EmailOTPSendView.as_view(), name='send_otp'),
     path('verify-otp/', VerifyEmailOTPView.as_view(), name='verify_otp'),
+
+    #employer profile document upload urls
+    path('upload-documents/', UploadEmployerDocumentsView.as_view(), name='upload-employer-documents'),
+
 ]
