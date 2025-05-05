@@ -270,3 +270,24 @@ class UploadEmployerDocumentsView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+#application status update view
+class ApplicationStatusView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        if user.user_type == 'employer':
+            profile = user.employer_profile
+            profile_serializer = EmployerProfileSerializer(profile)
+        elif user.user_type == 'consultancy':
+            profile = user.consultancy_profile
+            profile_serializer = ConsultancyProfileSerializer(profile)
+        elif user.user_type == 'candidate':
+            profile = user.candidate_profile
+            profile_serializer = CandidateProfileSerializer(profile)
+        return Response({'email': email, 'user_type': user.user_type, 'application_status': profile_serializer.data['application_status']}, status=200)
+

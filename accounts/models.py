@@ -65,6 +65,9 @@ class EmployerProfile(models.Model):
     pan_card = models.URLField(null=True, blank=True)
     poc_document = models.URLField(null=True, blank=True)
 
+    #application status
+    application_status = models.CharField(max_length=255, null=True, blank=True,default='verifying')
+
     def __str__(self):
         return self.company_name or self.user.name
 
@@ -76,12 +79,17 @@ class ConsultancyProfile(models.Model):
     experience_years = models.PositiveIntegerField(null=True, blank=True)
     office_address = models.TextField(null=True, blank=True)
     website = models.URLField(blank=True, null=True)
+    consultancy_size = models.CharField(max_length=100, null=True, blank=True)
 
     # Cloudinary Image Field
     msme_or_incorporation_certificate = models.URLField(null=True, blank=True)
     gstin_certificate = models.URLField(null=True, blank=True)
     pan_card = models.URLField(null=True, blank=True)
     poc_document = models.URLField(null=True, blank=True)
+
+    #application status
+    application_status = models.CharField(max_length=255, null=True, blank=True,default='verifying')
+
 
     def __str__(self):
         return self.consultancy_name or self.user.name
@@ -93,9 +101,15 @@ class CandidateProfile(models.Model):
     experience_years = models.PositiveIntegerField(null=True, blank=True)
     skills = models.TextField(null=True, blank=True)
     portfolio_website = models.URLField(blank=True, null=True)
+    gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    preferenced_city = models.CharField(max_length=300, null=True, blank=True)
 
     # Cloudinary Image Field
     resume = models.URLField(null=True, blank=True)
+
+    #application status
+    application_status = models.CharField(max_length=255, null=True, blank=True,default='verifying')
 
     def __str__(self):
         return self.user.name or self.user.name

@@ -1,5 +1,5 @@
 from django.urls import path, include
-from accounts.views import EmployerProfileUpdateView, ConsultancyProfileUpdateView, CandidateProfileUpdateView, get_user_profile, send_reset_password_email, reset_password, GoogleLoginAPIView, EmailOTPSendView, VerifyEmailOTPView, UploadEmployerDocumentsView
+from accounts.views import EmployerProfileUpdateView, ConsultancyProfileUpdateView, CandidateProfileUpdateView, get_user_profile, send_reset_password_email, reset_password, GoogleLoginAPIView, EmailOTPSendView, VerifyEmailOTPView, UploadEmployerDocumentsView, ApplicationStatusView
 
 urlpatterns = [
     path('auth/', include('djoser.urls')),
@@ -26,5 +26,8 @@ urlpatterns = [
 
     #employer profile document upload urls
     path('upload-documents/', UploadEmployerDocumentsView.as_view(), name='upload-employer-documents'),
+
+    #application status update urls
+    path('get-application-status/', ApplicationStatusView.as_view(), name='get-application-status'),
 
 ]
