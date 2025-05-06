@@ -58,6 +58,8 @@ class EmployerProfile(models.Model):
     company_size = models.CharField(max_length=100, null=True, blank=True)
     company_address = models.TextField(null=True, blank=True)
     website_url = models.URLField(blank=True, null=True)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
+
 
     # Cloudinary Image Field
     msme_or_incorporation_certificate = models.URLField(null=True, blank=True)
@@ -80,6 +82,7 @@ class ConsultancyProfile(models.Model):
     office_address = models.TextField(null=True, blank=True)
     website = models.URLField(blank=True, null=True)
     consultancy_size = models.CharField(max_length=100, null=True, blank=True)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
 
     # Cloudinary Image Field
     msme_or_incorporation_certificate = models.URLField(null=True, blank=True)
@@ -101,8 +104,9 @@ class CandidateProfile(models.Model):
     experience_years = models.PositiveIntegerField(null=True, blank=True)
     skills = models.TextField(null=True, blank=True)
     portfolio_website = models.URLField(blank=True, null=True)
-    gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], null=True, blank=True)
+    gender = models.CharField(max_length=10, null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
     preferenced_city = models.CharField(max_length=300, null=True, blank=True)
 
     # Cloudinary Image Field
