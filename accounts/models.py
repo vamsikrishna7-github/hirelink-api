@@ -45,6 +45,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'phone', 'user_type']
 
+
+    def save(self, *args, **kwargs):
+        if self.user_type == 'candidate':
+            self.is_verified = True
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.email or self.name
 
