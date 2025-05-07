@@ -1,7 +1,7 @@
 import mimetypes
-from rest_framework.generics import RetrieveUpdateAPIView
-from .models import EmployerProfile, ConsultancyProfile, CandidateProfile, User, EmailOTP
-from .serializers import EmployerProfileSerializer, ConsultancyProfileSerializer, CandidateProfileSerializer, EmployerProfileDocumentUploadSerializer, CandidateProfileDocumentUploadSerializer, ConsultancyProfileDocumentUploadSerializer
+from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from .models import EmployerProfile, ConsultancyProfile, CandidateProfile, User, EmailOTP, Education, Experience
+from .serializers import EmployerProfileSerializer, ConsultancyProfileSerializer, CandidateProfileSerializer, EmployerProfileDocumentUploadSerializer, CandidateProfileDocumentUploadSerializer, ConsultancyProfileDocumentUploadSerializer, EducationSerializer, ExperienceSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -41,6 +41,42 @@ class CandidateProfileUpdateView(RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user.candidate_profile
+
+# education update view
+class EducationListView(ListCreateAPIView):
+    serializer_class = EducationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Education.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class EducationDetailView(RetrieveUpdateDestroyAPIView):
+    serializer_class = EducationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Education.objects.filter(user=self.request.user)
+
+# experience update view
+class ExperienceListView(ListCreateAPIView):
+    serializer_class = ExperienceSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Experience.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class ExperienceDetailView(RetrieveUpdateDestroyAPIView):
+    serializer_class = ExperienceSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Experience.objects.filter(user=self.request.user)
 
 
 # Get User Data and Profile Data

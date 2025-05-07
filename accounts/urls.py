@@ -1,5 +1,5 @@
 from django.urls import path, include
-from accounts.views import EmployerProfileUpdateView, ConsultancyProfileUpdateView, CandidateProfileUpdateView, get_user_profile, send_reset_password_email, reset_password, GoogleLoginAPIView, EmailOTPSendView, VerifyEmailOTPView, UploadEmployerDocumentsView, ApplicationStatusView
+from accounts.views import EmployerProfileUpdateView, ConsultancyProfileUpdateView, CandidateProfileUpdateView, get_user_profile, send_reset_password_email, reset_password, GoogleLoginAPIView, EmailOTPSendView, VerifyEmailOTPView, UploadEmployerDocumentsView, ApplicationStatusView, EducationListView, EducationDetailView, ExperienceListView, ExperienceDetailView
 
 urlpatterns = [
     path('auth/', include('djoser.urls')),
@@ -15,6 +15,8 @@ urlpatterns = [
     path('consultancy/profile/', ConsultancyProfileUpdateView.as_view(), name='consultancy-profile-update'),
     path('candidate/profile/', CandidateProfileUpdateView.as_view(), name='candidate-profile-update'),
     path('get/profile/', get_user_profile, name='get-profile'),
+    
+
 
     #password reset urls
     path('auth/request-reset-password/', send_reset_password_email),
@@ -29,5 +31,13 @@ urlpatterns = [
 
     #application status update urls
     path('get-application-status/', ApplicationStatusView.as_view(), name='get-application-status'),
+
+    # Education URLs
+    path('educations/', EducationListView.as_view(), name='education-list'),
+    path('educations/<int:pk>/', EducationDetailView.as_view(), name='education-detail'),
+    
+    # Experience URLs
+    path('experiences/', ExperienceListView.as_view(), name='experience-list'),
+    path('experiences/<int:pk>/', ExperienceDetailView.as_view(), name='experience-detail'),
 
 ]

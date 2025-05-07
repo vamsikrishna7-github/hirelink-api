@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, EmployerProfile, ConsultancyProfile, CandidateProfile
+from .models import User, EmployerProfile, ConsultancyProfile, CandidateProfile, Education, Experience
 
 
 admin.site.site_header = "HireLink Administration"
@@ -28,3 +28,5 @@ admin.site.register(User, UserAdmin)
 admin.site.register(EmployerProfile)
 admin.site.register(ConsultancyProfile)
 admin.site.register(CandidateProfile)
+admin.site.register(Education)
+admin.site.register(Experience)

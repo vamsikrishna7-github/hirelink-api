@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import User, EmployerProfile, ConsultancyProfile, CandidateProfile
+from .models import User, CandidateProfile, Education, Experience, EmployerProfile, ConsultancyProfile
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -10,4 +10,20 @@ def create_user_profile(sender, instance, created, **kwargs):
         elif instance.user_type == 'consultancy':
             ConsultancyProfile.objects.create(user=instance)
         elif instance.user_type == 'candidate':
-            CandidateProfile.objects.create(user=instance)
+            # Create the candidate profile first
+            candidate_profile = CandidateProfile.objects.create(user=instance)
+            
+            # Create empty education record
+            Education.objects.create(
+                candidate_profile=candidate_profile,
+                school_name="",
+                degree="",
+                field_of_study=""
+            )
+            
+            # Create empty experience record
+            Experience.objects.create(
+                candidate_profile=candidate_profile,
+                company_name="",
+                designation=""
+            )

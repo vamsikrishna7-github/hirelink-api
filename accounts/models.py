@@ -100,8 +100,6 @@ class ConsultancyProfile(models.Model):
 
 class CandidateProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='candidate_profile')
-    education = models.CharField(max_length=255, null=True, blank=True)
-    experience_years = models.PositiveIntegerField(null=True, blank=True)
     skills = models.TextField(null=True, blank=True)
     portfolio_website = models.URLField(blank=True, null=True)
     gender = models.CharField(max_length=10, null=True, blank=True)
@@ -117,6 +115,59 @@ class CandidateProfile(models.Model):
 
     def __str__(self):
         return self.user.name or self.user.name
+    
+class Education(models.Model):
+    EDUCATION_TYPES = (
+        ('primary', 'Primary School'),
+        ('secondary', 'Secondary School'),
+        ('higher_secondary', 'Higher Secondary'),
+        ('bachelors', 'Bachelors'),
+        ('masters', 'Masters'),
+        ('phd', 'PhD'),
+        ('other', 'Other'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='educations')
+    education_type = models.CharField(max_length=20, choices=EDUCATION_TYPES, default='other')
+    school_name = models.CharField(max_length=255, null=True, blank=True)
+    degree = models.CharField(max_length=255, null=True, blank=True)
+    field_of_study = models.CharField(max_length=255, null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    grade = models.CharField(max_length=50, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.created_at:
+            self.created_at = timezone.now()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.degree} at {self.school_name}"
+
+
+class Experience(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='experiences')
+    company_name = models.CharField(max_length=255, null=True, blank=True)
+    designation = models.CharField(max_length=255, null=True, blank=True)
+    job_type = models.CharField(max_length=255, null=True, blank=True)
+    location = models.CharField(max_length=255, null=True, blank=True)
+    currently_working = models.BooleanField(default=False)
+    job_description = models.TextField(null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.created_at:
+            self.created_at = timezone.now()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.designation} at {self.company_name}"
+
 
 
 class EmailOTP(models.Model):

@@ -1,7 +1,7 @@
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer, UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 from .models import User
-from .models import EmployerProfile, ConsultancyProfile, CandidateProfile
+from .models import EmployerProfile, ConsultancyProfile, CandidateProfile, Experience, Education
 
 
 
@@ -70,6 +70,23 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
         model = CandidateProfile
         fields = '__all__'
         read_only_fields = ['user']
+
+
+class EducationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Education
+        fields = ['id', 'education_type', 'school_name', 'degree', 'field_of_study', 
+                 'start_date', 'end_date', 'grade', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class ExperienceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Experience
+        fields = ['id', 'company_name', 'designation', 'job_type', 'location',
+                 'currently_working', 'job_description', 'start_date', 'end_date',
+                 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
 
 # Employer Profile Document Upload Serializer
