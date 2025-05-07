@@ -15,7 +15,7 @@ def create_user_profile(sender, instance, created, **kwargs):
             
             # Create empty education record
             Education.objects.create(
-                candidate_profile=candidate_profile,
+                user=instance,
                 school_name="",
                 degree="",
                 field_of_study=""
@@ -23,7 +23,7 @@ def create_user_profile(sender, instance, created, **kwargs):
             
             # Create empty experience record
             Experience.objects.create(
-                candidate_profile=candidate_profile,
+                user=instance,
                 company_name="",
                 designation=""
             )
