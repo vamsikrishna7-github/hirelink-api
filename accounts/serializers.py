@@ -45,8 +45,8 @@ class UserCreateSerializer(BaseUserCreateSerializer):
 class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         model = User
-        fields = ('id', 'email', 'name', 'phone', 'user_type', 'registration_step', 'completed_steps')
-
+        fields = ('id', 'email', 'name', 'phone', 'registration_step', 'completed_steps')
+        read_only_fields = ['registration_step', 'completed_steps', 'id']
 
 # Employer Profile Serializer
 class EmployerProfileSerializer(serializers.ModelSerializer):
