@@ -41,7 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_deleted = models.BooleanField(default=False)
 
     # Registration tracking
-    registration_step = models.PositiveSmallIntegerField(default=1)
+    registration_step = models.PositiveSmallIntegerField(default=3)
     completed_steps = models.BooleanField(default=False)
 
     objects = UserManager()
