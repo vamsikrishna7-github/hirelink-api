@@ -4,6 +4,9 @@ from django.conf import settings
 import random
 from django.utils import timezone
 from datetime import timedelta
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 class UserManager(BaseUserManager):
     def create_user(self, email, name, phone, user_type, password=None, **extra_fields):
         if not email:
@@ -39,6 +42,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_phone_verified = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
+
+    date_joined = models.DateTimeField(auto_now_add=True)
+    last_login = models.DateTimeField(auto_now=True)
 
     # Registration tracking
     registration_step = models.PositiveSmallIntegerField(default=3)
@@ -152,7 +158,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 steps += 1
 
             self.registration_step = steps
-            self.completed_steps = steps >= 7  # All steps completed
+            self.completed_steps = steps >= 5  # All steps completed
         except CandidateProfile.DoesNotExist:
             pass
 
@@ -171,6 +177,8 @@ class EmployerProfile(models.Model):
     website_url = models.URLField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     # Cloudinary Image Field
     msme_or_incorporation_certificate = models.URLField(null=True, blank=True)
@@ -180,6 +188,12 @@ class EmployerProfile(models.Model):
 
     #application status
     application_status = models.CharField(max_length=255, null=True, blank=True,default='verifying')
+
+    def save(self, *args, **kwargs):
+        if self.phone_number and self.phone_number != self.user.phone:
+            self.user.phone = self.phone_number
+            self.user.save(update_fields=['phone'])
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.company_name or self.user.name
@@ -195,6 +209,9 @@ class ConsultancyProfile(models.Model):
     consultancy_size = models.CharField(max_length=100, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     # Cloudinary Image Field
     msme_or_incorporation_certificate = models.URLField(null=True, blank=True)
     gstin_certificate = models.URLField(null=True, blank=True)
@@ -204,6 +221,11 @@ class ConsultancyProfile(models.Model):
     #application status
     application_status = models.CharField(max_length=255, null=True, blank=True,default='verifying')
 
+    def save(self, *args, **kwargs):
+        if self.phone_number and self.phone_number != self.user.phone:
+            self.user.phone = self.phone_number
+            self.user.save(update_fields=['phone'])
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.consultancy_name or self.user.name
@@ -218,11 +240,20 @@ class CandidateProfile(models.Model):
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     preferenced_city = models.CharField(max_length=300, null=True, blank=True)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     # Cloudinary Image Field
     resume = models.URLField(null=True, blank=True)
 
     #application status
     application_status = models.CharField(max_length=255, null=True, blank=True,default='approved')
+
+    def save(self, *args, **kwargs):
+        if self.phone_number and self.phone_number != self.user.phone:
+            self.user.phone = self.phone_number
+            self.user.save(update_fields=['phone'])
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.user.name or self.user.name
@@ -288,3 +319,24 @@ class EmailOTP(models.Model):
 
     def is_expired(self):
         return timezone.now() > self.created_at + timedelta(minutes=10)
+
+@receiver(post_save, sender=User)
+def sync_user_phone_to_profile(sender, instance, **kwargs):
+    """Signal to sync User phone to profile phone_number"""
+    if hasattr(instance, 'employer_profile'):
+        profile = instance.employer_profile
+        if profile.phone_number != instance.phone:
+            profile.phone_number = instance.phone
+            profile.save(update_fields=['phone_number'])
+    
+    if hasattr(instance, 'consultancy_profile'):
+        profile = instance.consultancy_profile
+        if profile.phone_number != instance.phone:
+            profile.phone_number = instance.phone
+            profile.save(update_fields=['phone_number'])
+    
+    if hasattr(instance, 'candidate_profile'):
+        profile = instance.candidate_profile
+        if profile.phone_number != instance.phone:
+            profile.phone_number = instance.phone
+            profile.save(update_fields=['phone_number'])

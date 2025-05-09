@@ -53,7 +53,7 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployerProfile
         fields = '__all__' 
-        read_only_fields = ['user']
+        read_only_fields = ['user', 'created_at', 'updated_at','application_status','id']
 
 
 # Consultancy Profile Serializer
@@ -61,7 +61,7 @@ class ConsultancyProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConsultancyProfile
         fields = '__all__'
-        read_only_fields = ['user']
+        read_only_fields = ['user', 'created_at', 'updated_at','application_status','id']
 
 
 # Candidate Profile Serializer
@@ -69,7 +69,7 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CandidateProfile
         fields = '__all__'
-        read_only_fields = ['user']
+        read_only_fields = ['user', 'created_at', 'updated_at','application_status','id']
 
 
 class EducationSerializer(serializers.ModelSerializer):
