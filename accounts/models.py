@@ -49,6 +49,112 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'phone', 'user_type']
 
+    def update_registration_steps(self):
+        """Update registration steps based on user type and completed data"""
+        if self.user_type == 'employer':
+            self._update_employer_steps()
+        elif self.user_type == 'consultancy':
+            self._update_consultancy_steps()
+        elif self.user_type == 'candidate':
+            self._update_candidate_steps()
+        
+        self.save()
+
+    def _update_employer_steps(self):
+        """Update steps for employer type"""
+        try:
+            profile = self.employer_profile
+            steps = 3  # Start with base step
+
+            # Step 1: Basic company info
+            if all([profile.company_name, profile.designation, profile.company_size]):
+                steps += 1
+
+            # Step 2: Company address
+            if profile.company_address:
+                steps += 1
+
+            # Step 3: Documents
+            if all([
+                profile.msme_or_incorporation_certificate,
+                profile.gstin_certificate,
+                profile.pan_card,
+                profile.poc_document
+            ]):
+                steps += 1
+
+            self.registration_step = steps
+            self.completed_steps = steps >= 6  # All steps completed
+        except EmployerProfile.DoesNotExist:
+            pass
+
+    def _update_consultancy_steps(self):
+        """Update steps for consultancy type"""
+        try:
+            profile = self.consultancy_profile
+            steps = 3  # Start with base step
+
+            # Step 1: Basic consultancy info
+            if all([profile.consultancy_name, profile.specialization, profile.consultancy_size]):
+                steps += 1
+
+            # Step 2: Office address
+            if profile.office_address:
+                steps += 1
+
+            # Step 3: Documents
+            if all([
+                profile.msme_or_incorporation_certificate,
+                profile.gstin_certificate,
+                profile.pan_card,
+                profile.poc_document
+            ]):
+                steps += 1
+
+            self.registration_step = steps
+            self.completed_steps = steps >= 6  # All steps completed
+        except ConsultancyProfile.DoesNotExist:
+            pass
+
+    def _update_candidate_steps(self):
+        """Update steps for candidate type"""
+        try:
+            profile = self.candidate_profile
+            steps = 3  # Start with base step
+
+            # Step 1: Basic profile info
+            if all([profile.gender, profile.city, profile.preferenced_city]):
+                steps += 1
+
+            # Step 2: Education
+            education = self.educations.first()
+            if education and all([
+                education.education_type,
+                education.school_name,
+                education.degree,
+                education.start_date,
+                education.field_of_study
+            ]):
+                steps += 1
+
+            # Step 3: Experience
+            experience = self.experiences.first()
+            if experience and all([
+                experience.company_name,
+                experience.designation,
+                experience.job_type,
+                experience.location
+            ]):
+                steps += 1
+
+            # Step 4: Resume
+            if profile.resume:
+                steps += 1
+
+            self.registration_step = steps
+            self.completed_steps = steps >= 7  # All steps completed
+        except CandidateProfile.DoesNotExist:
+            pass
 
     def __str__(self):
         return self.email or self.name

@@ -27,3 +27,23 @@ def create_user_profile(sender, instance, created, **kwargs):
                 company_name="",
                 designation=""
             )
+
+@receiver(post_save, sender=EmployerProfile)
+def update_employer_registration_steps(sender, instance, **kwargs):
+    instance.user.update_registration_steps()
+
+@receiver(post_save, sender=ConsultancyProfile)
+def update_consultancy_registration_steps(sender, instance, **kwargs):
+    instance.user.update_registration_steps()
+
+@receiver(post_save, sender=CandidateProfile)
+def update_candidate_registration_steps(sender, instance, **kwargs):
+    instance.user.update_registration_steps()
+
+@receiver(post_save, sender=Education)
+def update_education_registration_steps(sender, instance, **kwargs):
+    instance.user.update_registration_steps()
+
+@receiver(post_save, sender=Experience)
+def update_experience_registration_steps(sender, instance, **kwargs):
+    instance.user.update_registration_steps()
