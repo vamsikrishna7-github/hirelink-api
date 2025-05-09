@@ -73,7 +73,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             steps = 3  # Start with base step
 
             # Step 1: Basic company info
-            if all([profile.company_name, profile.designation, profile.company_size]):
+            if all([profile.company_name]):
                 steps += 1
 
             # Step 2: Company address
@@ -101,7 +101,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             steps = 3  # Start with base step
 
             # Step 1: Basic consultancy info
-            if all([profile.consultancy_name, profile.specialization, profile.consultancy_size]):
+            if all([profile.consultancy_name]):
                 steps += 1
 
             # Step 2: Office address
