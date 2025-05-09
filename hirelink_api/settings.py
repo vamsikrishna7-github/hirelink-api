@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'accounts',
     'corsheaders',
     'cloudinary',
+    'django_extensions',
 ]
 
 SIMPLE_JWT = {
