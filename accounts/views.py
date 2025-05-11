@@ -397,11 +397,9 @@ class UpdateProfileImageView(APIView):
             serializer = ConsultancyProfileSerializer(profile, data=data, partial=True)
         elif user.user_type == 'candidate':
             serializer = CandidateProfileSerializer(profile, data=data, partial=True)
-
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #user update view like name, phone

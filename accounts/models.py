@@ -176,6 +176,10 @@ class EmployerProfile(models.Model):
     company_address = models.TextField(null=True, blank=True)
     website_url = models.URLField(blank=True, null=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
+    company_description = models.TextField(null=True, blank=True)
+    core_business = models.TextField(null=True, blank=True)
+    company_culture = models.TextField(null=True, blank=True)
+    profile_image = models.URLField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -208,6 +212,7 @@ class ConsultancyProfile(models.Model):
     website = models.URLField(blank=True, null=True)
     consultancy_size = models.CharField(max_length=100, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
+    profile_image = models.URLField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
