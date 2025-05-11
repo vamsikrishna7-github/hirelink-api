@@ -29,7 +29,7 @@ urlpatterns = [
     path('send-otp/', EmailOTPSendView.as_view(), name='send_otp'),
     path('verify-otp/', VerifyEmailOTPView.as_view(), name='verify_otp'),
 
-    #employer profile document upload urls
+    #profile document upload urls for registration
     path('upload-documents/', UploadDocumentsView.as_view(), name='upload-documents'),
 
     #application status update urls

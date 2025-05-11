@@ -257,13 +257,10 @@ class VerifyEmailOTPView(APIView):
 
 # Employer Profile Document Upload View
 class UploadDocumentsView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
-        email = request.data.get('email')
-        if not email:
-            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(id=request.user.id)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         
@@ -316,14 +313,13 @@ class UploadDocumentsView(APIView):
 
 #application status update view
 class ApplicationStatusView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
-        email = request.data.get('email')
-        if not email:
-            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(id=request.user.id)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
         if user.user_type == 'employer':
             profile = user.employer_profile
             profile_serializer = EmployerProfileSerializer(profile)
@@ -333,7 +329,7 @@ class ApplicationStatusView(APIView):
         elif user.user_type == 'candidate':
             profile = user.candidate_profile
             profile_serializer = CandidateProfileSerializer(profile)
-        return Response({'email': email, 'user_type': user.user_type, 'application_status': profile_serializer.data['application_status']}, status=200)
+        return Response({'email': user.email, 'user_type': user.user_type, 'application_status': profile_serializer.data['application_status']}, status=200)
 
 #dashboard data view
 #update profile_image view
@@ -408,6 +404,7 @@ class UpdateProfileImageView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+#user update view like name, phone
 class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
