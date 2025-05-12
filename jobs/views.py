@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from .models import JobPost, Bid, DirectApplication
 from .serializers import JobPostSerializer, BidSerializer, DirectApplicationSerializer
+from .permissions import IsEmployerOrReadOnly, IsCandidateOrReadOnly, IsConsultancyOrReadOnly
+from django.db import models
 
 class JobPostFilter(filters.FilterSet):
     min_salary = filters.NumberFilter(field_name="min_salary", lookup_expr='gte')
@@ -25,10 +27,32 @@ class JobPostViewSet(viewsets.ModelViewSet):
     queryset = JobPost.objects.filter(is_published=True)
     serializer_class = JobPostSerializer
     filterset_class = JobPostFilter
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated, IsEmployerOrReadOnly]
+    
+    def get_permissions(self):
+        """
+        Override to set different permissions based on the action
+        """
+        if self.action == 'apply':
+            return [permissions.IsAuthenticated, IsCandidateOrReadOnly()]
+        return super().get_permissions()
     
     def perform_create(self, serializer):
         serializer.save(posted_by=self.request.user)
+    
+    def get_queryset(self):
+        """
+        Filter queryset based on user type
+        """
+        user = self.request.user
+        if hasattr(user, 'employer_profile'):
+            # Employers can see all published jobs plus their own unpublished ones
+            return JobPost.objects.filter(
+                models.Q(is_published=True) | 
+                models.Q(posted_by=user)
+            )
+        # Candidates and consultancies can only see published jobs
+        return JobPost.objects.filter(is_published=True)
     
     @action(detail=True, methods=['post'])
     def apply(self, request, pk=None):
