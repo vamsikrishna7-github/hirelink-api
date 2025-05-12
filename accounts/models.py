@@ -249,8 +249,6 @@ class CandidateProfile(models.Model):
     bio = models.CharField(max_length=180, null=True, blank=True)
     about = models.TextField(null=True, blank=True)
 
-
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -258,9 +256,16 @@ class CandidateProfile(models.Model):
     resume = models.URLField(null=True, blank=True)
 
     #application status
-    application_status = models.CharField(max_length=255, null=True, blank=True,default='approved')
+    application_status = models.CharField(max_length=255, null=True, blank=True, default='pending')
 
     def save(self, *args, **kwargs):
+        # Update application status based on resume
+        if self.resume and self.resume.strip():
+            self.application_status = 'approved'
+        else:
+            self.application_status = 'pending'
+            
+        # Sync phone number with user if changed
         if self.phone_number and self.phone_number != self.user.phone:
             self.user.phone = self.phone_number
             self.user.save(update_fields=['phone'])
