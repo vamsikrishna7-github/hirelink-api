@@ -18,8 +18,13 @@ from django.contrib import admin as admin_site
 from django.urls import path, include
 from django.conf import settings
 from accounts.utils import health_check
+from core.views import home
 
 urlpatterns = [
+
+    #core urls
+     path('', home, name='home'),
+
     path('control/', admin_site.site.urls),
 
     # API URLs
