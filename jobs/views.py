@@ -3,10 +3,11 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
-from .models import JobPost, Bid, DirectApplication
-from .serializers import JobPostSerializer, BidSerializer, DirectApplicationSerializer
+from .models import JobPost, Bid, DirectApplication, SavedJob
+from .serializers import JobPostSerializer, BidSerializer, DirectApplicationSerializer, SavedJobSerializer
 from .permissions import IsEmployerOrReadOnly, IsCandidateOrReadOnly, IsConsultancyOrReadOnly
 from django.db import models
+from rest_framework import serializers
 
 class JobPostFilter(filters.FilterSet):
     min_salary = filters.NumberFilter(field_name="min_salary", lookup_expr='gte')
@@ -34,7 +35,7 @@ class JobPostViewSet(viewsets.ModelViewSet):
         Override to set different permissions based on the action
         """
         if self.action == 'apply':
-            return [permissions.IsAuthenticated, IsCandidateOrReadOnly()]
+            return [permissions.IsAuthenticated(), IsCandidateOrReadOnly()]
         return super().get_permissions()
     
     def perform_create(self, serializer):
@@ -143,3 +144,35 @@ class DirectApplicationViewSet(viewsets.ModelViewSet):
         application.status = new_status
         application.save()
         return Response(DirectApplicationSerializer(application).data)
+
+
+class SavedJobViewSet(viewsets.ModelViewSet):
+    queryset = SavedJob.objects.all()
+    serializer_class = SavedJobSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, 'candidate_profile'):
+            return SavedJob.objects.filter(candidate=user.candidate_profile)
+        return SavedJob.objects.none()
+
+    def perform_create(self, serializer):
+        if not hasattr(self.request.user, 'candidate_profile'):
+            raise permissions.PermissionDenied("Only candidates can save jobs")
+        
+        # Check if job already exists in saved jobs
+        job_id = serializer.validated_data['job'].id
+        if SavedJob.objects.filter(
+            job_id=job_id,
+            candidate=self.request.user.candidate_profile
+        ).exists():
+            raise serializers.ValidationError("This job is already saved")
+            
+        serializer.save(candidate=self.request.user.candidate_profile)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.candidate != request.user.candidate_profile:
+            raise permissions.PermissionDenied("You can only unsave jobs that you have saved")
+        return super().destroy(request, *args, **kwargs)

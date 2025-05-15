@@ -136,3 +136,15 @@ class DirectApplication(models.Model):
     
     def __str__(self):
         return f"{self.candidate.get_full_name()} - {self.job.title}"
+    
+
+class SavedJob(models.Model):
+    job = models.ForeignKey(JobPost, on_delete=models.CASCADE, related_name='saved_jobs')
+    candidate = models.ForeignKey(CandidateProfile, on_delete=models.CASCADE, related_name='saved_jobs')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('job', 'candidate')
+
+    def __str__(self):
+        return f"{self.candidate.get_full_name()} - {self.job.title}"

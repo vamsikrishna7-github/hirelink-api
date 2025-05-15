@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import JobPost, Bid, DirectApplication
+from .models import JobPost, Bid, DirectApplication, SavedJob
 from accounts.serializers import UserSerializer
 
 class JobPostSerializer(serializers.ModelSerializer):
@@ -32,3 +32,10 @@ class DirectApplicationSerializer(serializers.ModelSerializer):
         model = DirectApplication
         fields = '__all__'
         read_only_fields = ('applied_at', 'updated_at', 'status')
+
+
+class SavedJobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedJob
+        fields = ['id', 'job', 'candidate', 'created_at']
+        read_only_fields = ('created_at', 'candidate')
