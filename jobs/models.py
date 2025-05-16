@@ -121,6 +121,7 @@ class DirectApplication(models.Model):
         ('interview', 'Interview Scheduled'),
         ('rejected', 'Rejected'),
         ('hired', 'Hired'),
+        ('pending', 'Pending'),
     ]
     
     job = models.ForeignKey(JobPost, on_delete=models.CASCADE, related_name='applications')

@@ -4,10 +4,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from .models import JobPost, Bid, DirectApplication, SavedJob
+from accounts.models import User, CandidateProfile, Education, Experience
+from accounts.serializers import CandidateProfileSerializer, EducationSerializer, ExperienceSerializer
 from .serializers import JobPostSerializer, BidSerializer, DirectApplicationSerializer, SavedJobSerializer
 from .permissions import IsEmployerOrReadOnly, IsCandidateOrReadOnly, IsConsultancyOrReadOnly
 from django.db import models
 from rest_framework import serializers
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 class JobPostFilter(filters.FilterSet):
     min_salary = filters.NumberFilter(field_name="min_salary", lookup_expr='gte')
@@ -176,3 +181,41 @@ class SavedJobViewSet(viewsets.ModelViewSet):
         if instance.candidate != request.user.candidate_profile:
             raise permissions.PermissionDenied("You can only unsave jobs that you have saved")
         return super().destroy(request, *args, **kwargs)
+
+#get Candidate Profile
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_user_profile(request):
+    request_user = request.user
+    if request_user.user_type == "candidate" or request_user.user_type == "consultancy":
+        return Response({"error": "You are not authorized to access this View"}, status=400)
+    id = request.data.get("id")
+    candidate_profile = CandidateProfile.objects.get(id=id)
+    # print(candidate_profile,"candidate_profile\n", candidate_profile.user.id,"candidate_profile.user.id\n", candidate_profile.user,"candidate_profile.user\n")
+    user = User.objects.get(id=candidate_profile.user.id)
+    user_data = {
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "phone": user.phone,
+        "user_type": user.user_type
+    }
+
+    try:
+        if user.user_type == 'candidate':
+            profile = user.candidate_profile
+            profile_serializer = CandidateProfileSerializer(profile)
+            education_serializer = EducationSerializer(Education.objects.filter(user=user), many=True)
+            experience_serializer = ExperienceSerializer(Experience.objects.filter(user=user), many=True)
+        else:
+            return Response({"error": "Invalid user type."}, status=400)
+
+        return Response({
+            "user": user_data,
+            "profile": profile_serializer.data,
+            "education": education_serializer.data,
+            "experience": experience_serializer.data
+        })
+
+    except (CandidateProfile.DoesNotExist):
+        return Response({"user": user_data, "profile": None, "message": "Profile not found."}, status=404)
