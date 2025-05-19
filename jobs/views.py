@@ -6,13 +6,15 @@ from django_filters import rest_framework as filters
 from .models import JobPost, Bid, DirectApplication, SavedJob
 from accounts.models import User, CandidateProfile, Education, Experience
 from accounts.serializers import CandidateProfileSerializer, EducationSerializer, ExperienceSerializer
-from .serializers import JobPostSerializer, BidSerializer, DirectApplicationSerializer, SavedJobSerializer
+from .serializers import JobPostSerializer, BidSerializer, DirectApplicationSerializer, SavedJobSerializer, UpdateBidSerializer
 from .permissions import IsEmployerOrReadOnly, IsCandidateOrReadOnly, IsConsultancyOrReadOnly
 from django.db import models
 from rest_framework import serializers
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError
 
 class JobPostFilter(filters.FilterSet):
     min_salary = filters.NumberFilter(field_name="min_salary", lookup_expr='gte')
@@ -87,12 +89,52 @@ class BidViewSet(viewsets.ModelViewSet):
             return Bid.objects.filter(consultancy=user.consultancy_profile)
         return Bid.objects.none()
     
+    def create(self, request, *args, **kwargs):
+        # Only allow consultancy profiles to create bids
+        if not hasattr(request.user, 'consultancy_profile'):
+            raise PermissionDenied("Only consultancies can submit bids")
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        try:
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except ValidationError as e:
+            error_message = str(e)
+            if "A consultancy can only submit 3 bids per job" in error_message:
+                return Response(
+                    {"detail": "You have reached the maximum limit of 3 bids for this job. Please review your existing bids."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            elif "You have already submitted this proposal for this job" in error_message:
+                return Response(
+                    {"detail": "You have already submitted this exact proposal for this job. Please modify your proposal."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
     def perform_create(self, serializer):
         serializer.save(consultancy=self.request.user.consultancy_profile)
+    
+    def update(self, request, *args, **kwargs):
+        # Only allow employers to update bid status
+        if 'status' in request.data and not hasattr(request.user, 'employer_profile'):
+            raise PermissionDenied("Only employers can update bid status")
+        return super().update(request, *args, **kwargs)
     
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
         bid = self.get_object()
+        if not hasattr(request.user, 'employer_profile'):
+            return Response(
+                {"detail": "Only employers can approve bids"},
+                status=status.HTTP_403_FORBIDDEN
+            )
         if request.user != bid.job.posted_by:
             return Response(
                 {"detail": "Only the job poster can approve bids"},
@@ -105,6 +147,11 @@ class BidViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         bid = self.get_object()
+        if not hasattr(request.user, 'employer_profile'):
+            return Response(
+                {"detail": "Only employers can reject bids"},
+                status=status.HTTP_403_FORBIDDEN
+            )
         if request.user != bid.job.posted_by:
             return Response(
                 {"detail": "Only the job poster can reject bids"},
@@ -219,3 +266,41 @@ def get_user_profile(request):
 
     except (CandidateProfile.DoesNotExist):
         return Response({"user": user_data, "profile": None, "message": "Profile not found."}, status=404)
+
+
+#update bid
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_bid(request, pk):
+    try:
+        bid = Bid.objects.get(id=pk)
+        # Compare the IDs directly
+        if bid.consultancy.id == request.user.consultancy_profile.id:
+            if 'status' in request.data:
+                return Response({"detail": "You are not authorized to update this bid status or consultancy or job or id"}, status=status.HTTP_403_FORBIDDEN)
+            serializer = UpdateBidSerializer(bid, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response({"detail": "You are not authorized to update this bid"}, status=status.HTTP_403_FORBIDDEN)
+    except Bid.DoesNotExist:
+        return Response({"detail": "Bid not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+#delete bid
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_bid(request, pk):
+    try:
+        bid = Bid.objects.get(id=pk)
+        if bid.consultancy.id == request.user.consultancy_profile.id:
+            bid.delete()
+            return Response({"detail": "Bid deleted successfully"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "You are not authorized to delete this bid"}, status=status.HTTP_403_FORBIDDEN)
+    except Bid.DoesNotExist:
+        return Response({"detail": "Bid not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)

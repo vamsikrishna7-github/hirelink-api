@@ -9,6 +9,14 @@ class JobPostSerializer(serializers.ModelSerializer):
         model = JobPost
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')
+        
+
+
+class UpdateBidSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bid
+        fields = ['proposal', 'fee', 'id', 'job', 'consultancy']
+        read_only_fields = ('id', 'job', 'consultancy')
 
 class BidSerializer(serializers.ModelSerializer):
     consultancy_name = serializers.CharField(source='consultancy.company_name', read_only=True)

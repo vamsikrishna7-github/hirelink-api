@@ -105,13 +105,21 @@ class Bid(models.Model):
         
         if existing_bids.count() >= 3:
             raise ValidationError("A consultancy can only submit 3 bids per job")
+        
+        # Check if this proposal is already submitted by this consultancy
+        if Bid.objects.filter(
+            job=self.job,
+            consultancy=self.consultancy,
+            proposal=self.proposal
+        ).exclude(pk=self.pk).exists():
+            raise ValidationError("You have already submitted this proposal for this job")
     
     def save(self, *args, **kwargs):
         self.full_clean()  # Runs clean() validation
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"{self.consultancy.company_name} - {self.job.title}"
+        return f"{self.consultancy.name if hasattr(self.consultancy, 'name') else 'Unknown'} - {self.job.title}"
 
 
 class DirectApplication(models.Model):

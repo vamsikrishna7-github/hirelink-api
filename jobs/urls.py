@@ -11,4 +11,6 @@ router.register(r'saved-jobs', views.SavedJobViewSet, basename='saved-job')
 urlpatterns = [
     path('', include(router.urls)),
     path('candidateprofile/', views.get_user_profile, name='candidateprofile'),
+    path('update-bid/<int:pk>/', views.update_bid, name='update-bid'),
+    path('delete-bid/<int:pk>/', views.delete_bid, name='delete-bid'),
 ]
