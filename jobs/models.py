@@ -144,7 +144,7 @@ class DirectApplication(models.Model):
         unique_together = ('job', 'candidate')
     
     def __str__(self):
-        return f"{self.candidate.get_full_name()} - {self.job.title}"
+        return f"{self.candidate.user.name} - {self.job.title}"
     
 
 class SavedJob(models.Model):
@@ -156,4 +156,4 @@ class SavedJob(models.Model):
         unique_together = ('job', 'candidate')
 
     def __str__(self):
-        return f"{self.candidate.get_full_name()} - {self.job.title}"
+        return f"{self.candidate.user.name} - {self.job.title}"
