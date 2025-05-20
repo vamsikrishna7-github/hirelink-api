@@ -4,8 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from .models import JobPost, Bid, DirectApplication, SavedJob
-from accounts.models import User, CandidateProfile, Education, Experience
-from accounts.serializers import CandidateProfileSerializer, EducationSerializer, ExperienceSerializer
+from accounts.models import User, CandidateProfile, Education, Experience, ConsultancyProfile
+from accounts.serializers import CandidateProfileSerializer, EducationSerializer, ExperienceSerializer, ConsultancyProfileSerializer
 from .serializers import JobPostSerializer, BidSerializer, DirectApplicationSerializer, SavedJobSerializer, UpdateBidSerializer
 from .permissions import IsEmployerOrReadOnly, IsCandidateOrReadOnly, IsConsultancyOrReadOnly
 from django.db import models
@@ -238,7 +238,6 @@ def get_user_profile(request):
         return Response({"error": "You are not authorized to access this View"}, status=400)
     id = request.data.get("id")
     candidate_profile = CandidateProfile.objects.get(id=id)
-    # print(candidate_profile,"candidate_profile\n", candidate_profile.user.id,"candidate_profile.user.id\n", candidate_profile.user,"candidate_profile.user\n")
     user = User.objects.get(id=candidate_profile.user.id)
     user_data = {
         "id": user.id,
@@ -304,3 +303,14 @@ def delete_bid(request, pk):
         return Response({"detail": "Bid not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+    
+#get consultancy profile only by employer
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_consultancy_profile(request, pk):
+    if request.user.user_type != "employer":
+        return Response({"detail": "You are not authorized to access this view"}, status=status.HTTP_403_FORBIDDEN)
+    consultancy_profile = ConsultancyProfile.objects.get(id=pk)
+    return Response(ConsultancyProfileSerializer(consultancy_profile).data)

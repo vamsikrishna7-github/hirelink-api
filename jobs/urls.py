@@ -13,4 +13,5 @@ urlpatterns = [
     path('candidateprofile/', views.get_user_profile, name='candidateprofile'),
     path('update-bid/<int:pk>/', views.update_bid, name='update-bid'),
     path('delete-bid/<int:pk>/', views.delete_bid, name='delete-bid'),
+    path('consultancy-profile/<int:pk>/', views.get_consultancy_profile, name='consultancy-profile'),
 ]
