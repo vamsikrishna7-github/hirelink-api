@@ -30,6 +30,7 @@ urlpatterns = [
     # API URLs
     path('api/', include('accounts.urls')),
     path('api/', include('jobs.urls')),
+    path('api/', include('help.urls')),
 
     #health check
     path('health/', health_check, name='health_check'),
