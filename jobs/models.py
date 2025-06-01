@@ -80,6 +80,8 @@ class Bid(models.Model):
         ('rejected', 'Rejected'),
     ]
     
+    agreement_id = models.CharField(max_length=20, unique=True, editable=False, null=True, blank=True)
+    agreement_pdf_url = models.URLField(blank=True, null=True)
     job = models.ForeignKey(JobPost, on_delete=models.CASCADE, related_name='bids')
     consultancy = models.ForeignKey(ConsultancyProfile, on_delete=models.CASCADE, related_name='bids')
     proposal = models.TextField()
@@ -95,6 +97,22 @@ class Bid(models.Model):
                 name='unique_bid_proposal'
             )
         ]
+    
+    def generate_agreement_id(self):
+        import random
+        import string
+        
+        # Get the last bid's ID or start from 1
+        last_bid = Bid.objects.order_by('-id').first()
+        last_id = last_bid.id if last_bid else 0
+        
+        # Generate a random string of 4 characters (2 letters, 2 numbers)
+        letters = ''.join(random.choices(string.ascii_uppercase, k=2))
+        numbers = ''.join(random.choices(string.digits, k=2))
+        random_part = f"{letters}{numbers}"
+        
+        # Combine with the ID to ensure uniqueness and minimum 10 digits
+        return f"BID{last_id + 1:06d}{random_part}"
     
     def clean(self):
         # Check if consultancy already has 3 bids for this job
@@ -115,6 +133,8 @@ class Bid(models.Model):
             raise ValidationError("You have already submitted this proposal for this job")
     
     def save(self, *args, **kwargs):
+        if not self.agreement_id:
+            self.agreement_id = self.generate_agreement_id()
         self.full_clean()  # Runs clean() validation
         super().save(*args, **kwargs)
     

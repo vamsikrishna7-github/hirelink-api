@@ -23,8 +23,8 @@ class BidSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Bid
-        fields = ['id', 'job', 'consultancy', 'consultancy_name', 'proposal', 'fee', 'status', 'created_at', 'updated_at']
-        read_only_fields = ('created_at', 'updated_at', 'status', 'consultancy')
+        fields = ['id', 'job', 'consultancy', 'consultancy_name', 'proposal', 'fee', 'status', 'created_at', 'updated_at', 'agreement_id', 'agreement_pdf_url']
+        read_only_fields = ['consultancy', 'agreement_id', 'agreement_pdf_url']
     
     def create(self, validated_data):
         # Get the consultancy profile from the authenticated user

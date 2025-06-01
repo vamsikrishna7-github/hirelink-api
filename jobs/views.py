@@ -15,6 +15,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError
+from .utils import generate_agreement_pdf
+from threading import Thread
+from jobs.utils import send_employer_reject_bid_email, send_consultancy_reject_bid_email
 
 class JobPostFilter(filters.FilterSet):
     min_salary = filters.NumberFilter(field_name="min_salary", lookup_expr='gte')
@@ -140,9 +143,30 @@ class BidViewSet(viewsets.ModelViewSet):
                 {"detail": "Only the job poster can approve bids"},
                 status=status.HTTP_403_FORBIDDEN
             )
-        bid.status = 'approved'
-        bid.save()
-        return Response(BidSerializer(bid).data)
+        
+        try:
+            # Generate agreement PDF and get URL
+            agreement_url = generate_agreement_pdf(bid.id)
+            
+            # Refresh bid from database to get updated fields
+            bid.refresh_from_db()
+            
+            # Update bid status and save
+            bid.status = 'approved'
+            bid.save()
+            
+            # Get updated serializer data
+            serializer = self.get_serializer(bid)
+            
+            return Response({
+                **serializer.data,
+                'agreement_url': agreement_url
+            })
+        except Exception as e:
+            return Response(
+                {"detail": f"Error generating agreement: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
@@ -158,7 +182,12 @@ class BidViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         bid.status = 'rejected'
+        bid.agreement_id = None
+        bid.agreement_pdf_url = None
         bid.save()
+        # send email to employer and consultancy
+        Thread(target=send_employer_reject_bid_email, args=(bid.id,)).start()
+        Thread(target=send_consultancy_reject_bid_email, args=(bid.id,)).start()
         return Response(BidSerializer(bid).data)
 
 class DirectApplicationViewSet(viewsets.ModelViewSet):
@@ -310,6 +339,9 @@ def delete_bid(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_consultancy_profile(request, pk):
+    
+
+
     if request.user.user_type != "employer":
         return Response({"detail": "You are not authorized to access this view"}, status=status.HTTP_403_FORBIDDEN)
     consultancy_profile = ConsultancyProfile.objects.get(id=pk)

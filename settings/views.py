@@ -1,12 +1,17 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import request, status
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
 from django.contrib.auth import logout
+from .models import EmailPreference
+from .serializers import EmailPreferenceSerializer
+from rest_framework.viewsets import ModelViewSet
+from accounts.models import User
+from rest_framework.permissions import IsAuthenticated
+
 
 
 @permission_classes([IsAuthenticated])
@@ -99,4 +104,17 @@ def delete_account(request):
         status=status.HTTP_405_METHOD_NOT_ALLOWED
     )
         
-        
+
+
+class EmailPreferenceView(ModelViewSet):
+    serializer_class = EmailPreferenceSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return EmailPreference.objects.filter(user=self.request.user)
+    
+    def get_object(self):
+        return EmailPreference.objects.get(user=self.request.user)
+    
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
