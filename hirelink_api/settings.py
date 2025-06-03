@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'core',
     'help',
     'settings',
+    'payments',
 ]
 
 
@@ -136,19 +137,46 @@ WSGI_APPLICATION = 'hirelink_api.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'hirelink',  # Database name
+#         'USER': 'hirelink_owner',  # Database user
+#         'PASSWORD': 'npg_W8Sek7gKIOpV',  # Database password
+#         'HOST': 'ep-tight-lake-a1j817oi-pooler.ap-southeast-1.aws.neon.tech',  # Neon.tech host
+#         'PORT': '5432',  # Default PostgreSQL port
+#         'OPTIONS': {
+#             'sslmode': 'require',  # Enforce SSL
+#         },
+#     }
+# }
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'hirelink',  # Database name
-        'USER': 'hirelink_owner',  # Database user
-        'PASSWORD': 'npg_W8Sek7gKIOpV',  # Database password
-        'HOST': 'ep-tight-lake-a1j817oi-pooler.ap-southeast-1.aws.neon.tech',  # Neon.tech host
-        'PORT': '5432',  # Default PostgreSQL port
+        'NAME': 'hirelink',
+        'USER': 'hirelink_owner',
+        'PASSWORD': 'npg_W8Sek7gKIOpV',
+        'HOST': 'ep-tight-lake-a1j817oi-pooler.ap-southeast-1.aws.neon.tech',
+        'PORT': '5432',
         'OPTIONS': {
-            'sslmode': 'require',  # Enforce SSL
+            'sslmode': 'require',
+            'connect_timeout': 3,  # Fail fast if no connection in 3 seconds
+            'keepalives_idle': 30,  # Reduce TCP keepalive traffic
         },
+        'CONN_MAX_AGE': 60,  # Recycle connections after 1 minute
     }
 }
+
+
+# # Temporarily replace DATABASES in settings.py with:
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': ':memory:',
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -208,3 +236,12 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 #Social logins
 GOOGLE_CLIENT_ID = "578224276104-sk0t3bvkn2qerllusiaibg6t0k348g31.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
+
+
+
+#payments
+#test key
+RAZORPAY_KEY_ID = "rzp_test_yJKyIDbc3qRAZk"
+RAZORPAY_KEY_SECRET = "xBC9bQa9jTC0ynzDTibQgpuQ"
+RAZORPAY_WEBHOOK_SECRET ='JCwVf@9YbM5xzhy'
+

@@ -168,6 +168,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class EmployerProfile(models.Model):
+    APPLICATION_STATUS_CHOICES = (
+        ('verifying', 'Verifying'),
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected')
+    )
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employer_profile')
     company_name = models.CharField(max_length=255, null=True, blank=True)
     designation = models.CharField(max_length=255, null=True, blank=True)
@@ -191,7 +198,7 @@ class EmployerProfile(models.Model):
     poc_document = models.URLField(null=True, blank=True)
 
     #application status
-    application_status = models.CharField(max_length=255, null=True, blank=True,default='verifying')
+    application_status = models.CharField(max_length=255, null=True, blank=True,default='verifying',choices=APPLICATION_STATUS_CHOICES)
 
     def save(self, *args, **kwargs):
         if self.phone_number and self.phone_number != self.user.phone:
@@ -204,6 +211,12 @@ class EmployerProfile(models.Model):
 
 
 class ConsultancyProfile(models.Model):
+    APPLICATION_STATUS_CHOICES = (
+        ('verifying', 'Verifying'),
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected')
+    )
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='consultancy_profile')
     consultancy_name = models.CharField(max_length=255, null=True, blank=True)
     specialization = models.CharField(max_length=255, null=True, blank=True)
@@ -224,7 +237,7 @@ class ConsultancyProfile(models.Model):
     poc_document = models.URLField(null=True, blank=True)
 
     #application status
-    application_status = models.CharField(max_length=255, null=True, blank=True,default='verifying')
+    application_status = models.CharField(max_length=255, null=True, blank=True,default='verifying',choices=APPLICATION_STATUS_CHOICES)
 
     def save(self, *args, **kwargs):
         if self.phone_number and self.phone_number != self.user.phone:

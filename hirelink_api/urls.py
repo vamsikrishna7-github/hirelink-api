@@ -23,7 +23,7 @@ from core.views import home
 urlpatterns = [
 
     #core urls
-     path('', home, name='home'),
+    path('', home, name='home'),
 
     path('control/', admin_site.site.urls),
 
@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/', include('jobs.urls')),
     path('api/', include('help.urls')),
     path('api/', include('settings.urls')),
+    path('api/', include('payments.urls')),
 
     #health check
     path('health/', health_check, name='health_check'),

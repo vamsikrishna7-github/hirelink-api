@@ -53,6 +53,9 @@ class JobPost(models.Model):
         choices=[('monthly', 'Monthly'), ('yearly', 'Yearly'), ('hourly', 'Hourly')],
         default='monthly'
     )
+    
+    bid_budget = models.PositiveIntegerField(default=1)
+    bid_candidates = models.PositiveIntegerField(default=1)
 
     description = models.TextField()
     requirements = models.TextField(blank=True, null=True)
