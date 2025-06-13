@@ -32,14 +32,14 @@ def create_order(request):
         payment = Payment.objects.create(
             user=request.user,
             bid=bid,
-            amount=float(bid.fee),
+            amount=float(bid.fee/100*30),
             currency='INR',
             status='created'
         )
         
         # Create Razorpay order
         razorpay_order = client.order.create({
-            'amount': int(float(bid.fee) * 100),  # Convert to paise
+            'amount': int(float(bid.fee/100*30) * 100),  # Convert to paise
             'currency': 'INR',
             'payment_capture': 1,
             'notes': {

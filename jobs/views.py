@@ -3,10 +3,10 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
-from .models import JobPost, Bid, DirectApplication, SavedJob
+from .models import JobPost, Bid, DirectApplication, SavedJob, CandidateSubmission, Resume
 from accounts.models import User, CandidateProfile, Education, Experience, ConsultancyProfile
 from accounts.serializers import CandidateProfileSerializer, EducationSerializer, ExperienceSerializer, ConsultancyProfileSerializer
-from .serializers import JobPostSerializer, BidSerializer, DirectApplicationSerializer, SavedJobSerializer, UpdateBidSerializer
+from .serializers import JobPostSerializer, BidSerializer, DirectApplicationSerializer, SavedJobSerializer, UpdateBidSerializer, CandidateSubmissionSerializer, ResumeSerializer
 from .permissions import IsEmployerOrReadOnly, IsCandidateOrReadOnly, IsConsultancyOrReadOnly
 from django.db import models
 from rest_framework import serializers
@@ -18,6 +18,10 @@ from rest_framework.exceptions import ValidationError
 from .utils import generate_agreement_pdf
 from threading import Thread
 from jobs.utils import send_employer_reject_bid_email, send_consultancy_reject_bid_email
+from django.core.files.uploadedfile import UploadedFile
+import mimetypes
+from cloudinary.uploader import upload as cloudinary_upload
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class JobPostFilter(filters.FilterSet):
     min_salary = filters.NumberFilter(field_name="min_salary", lookup_expr='gte')
@@ -346,3 +350,219 @@ def get_consultancy_profile(request, pk):
         return Response({"detail": "You are not authorized to access this view"}, status=status.HTTP_403_FORBIDDEN)
     consultancy_profile = ConsultancyProfile.objects.get(id=pk)
     return Response(ConsultancyProfileSerializer(consultancy_profile).data)
+
+
+#submit candidates
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def submit_candidates(request):
+    if not hasattr(request.user, 'consultancy_profile'):
+        return Response(
+            {"detail": "Only consultancies can submit candidates"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        bid_id = request.data.get("bid_id")
+        if not bid_id:
+            return Response(
+                {"detail": "Bid ID is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        bid = Bid.objects.get(id=bid_id)
+        
+        # Verify that the bid belongs to the requesting consultancy
+        if bid.consultancy != request.user.consultancy_profile:
+            return Response(
+                {"detail": "You can only submit candidates for your own bids"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get or create candidate submission
+        candidate_submission, created = CandidateSubmission.objects.get_or_create(
+            bid=bid
+        )
+
+        candidates = request.data.get("candidates", [])
+        if not candidates:
+            return Response(
+                {"detail": "No candidates provided"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        created_resumes = []
+        for candidate in candidates:
+            if not candidate.get("name") or not candidate.get("resume"):
+                continue
+
+            # Create resume record
+            resume = Resume.objects.create(
+                candidate_submission=candidate_submission,
+                name=candidate["name"],
+                resume=candidate["resume"],
+                status='pending'
+            )
+            created_resumes.append(resume)
+
+        if not created_resumes:
+            return Response(
+                {"detail": "No valid candidates were provided"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Serialize the response
+        serializer = CandidateSubmissionSerializer(candidate_submission)
+        return Response({
+            "detail": "Candidates submitted successfully",
+            "data": serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+    except Bid.DoesNotExist:
+        return Response(
+            {"detail": "Bid not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"detail": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_resume(request):
+    if not hasattr(request.user, 'consultancy_profile'):
+        return Response(
+            {"detail": "Only consultancies can upload resumes"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        file = request.FILES.get('resume')
+        if not file:
+            return Response(
+                {"detail": "No file provided"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate file type
+        content_type, _ = mimetypes.guess_type(file.name)
+        allowed_types = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "image/jpeg",
+            "image/png"
+        ]
+
+        if content_type not in allowed_types:
+            return Response(
+                {"detail": "Invalid file type. Only PDF, DOC, DOCX, JPG, and PNG files are allowed"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate file size (10MB limit)
+        if file.size > 10 * 1024 * 1024:  # 10MB in bytes
+            return Response(
+                {"detail": "File size exceeds 10MB limit"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Determine resource type for Cloudinary
+        if content_type in ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+            resource_type = "raw"
+        else:
+            resource_type = "image"
+
+        # Upload to Cloudinary
+        upload_result = cloudinary_upload(
+            file,
+            folder="resumes",
+            resource_type=resource_type,
+            allowed_formats=["pdf", "doc", "docx", "jpg", "jpeg", "png"]
+        )
+
+        return Response({
+            "url": upload_result.get('secure_url'),
+            "public_id": upload_result.get('public_id'),
+            "format": upload_result.get('format')
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        return Response(
+            {"detail": f"Error uploading file: {str(e)}"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        
+
+#get candidate submissions BY CONSULTANCY
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_candidate_submissions(request, pk):
+    if not hasattr(request.user, 'consultancy_profile'):
+        return Response(
+            {"detail": "Only consultancies can get candidate submissions"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    bid = Bid.objects.get(id=pk)
+    if not bid:
+        return Response(
+            {"detail": "Bid not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    if bid.consultancy != request.user.consultancy_profile:
+        return Response(
+            {"detail": "You are not authorized to get candidate submissions for this bid"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    candidate_submissions = CandidateSubmission.objects.filter(bid=bid)
+    return Response(CandidateSubmissionSerializer(candidate_submissions, many=True).data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_candidate_submissions_by_employer(request, pk):
+    if not hasattr(request.user, 'employer_profile'):
+        return Response(
+            {"detail": "Only employers can get candidate submissions"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    bid = Bid.objects.get(id=pk)
+    if not bid:
+        return Response(
+            {"detail": "Bid not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    if bid.job.posted_by != request.user:
+        return Response(
+            {"detail": "You are not authorized to get candidate submissions for this bid"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    candidate_submissions = CandidateSubmission.objects.filter(bid=bid)
+    return Response(CandidateSubmissionSerializer(candidate_submissions, many=True).data)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_candidate_submission(request, pk, resume_id):
+    if not hasattr(request.user, 'employer_profile'):
+        return Response(
+            {"detail": "Only employers can update candidate submissions"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    resume = Resume.objects.get(id=resume_id)
+    if resume.candidate_submission.bid.job.posted_by != request.user:
+        return Response(
+            {"detail": "You are not authorized to update this candidate submission"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    if 'status' in request.data:
+        resume.status = request.data['status']
+        resume.save()
+        return Response(ResumeSerializer(resume).data)
+    else:
+        return Response(
+            {"detail": "Invalid status"},
+            status=status.HTTP_400_BAD_REQUEST
+        )

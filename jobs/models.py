@@ -145,6 +145,51 @@ class Bid(models.Model):
         return f"{self.consultancy.name if hasattr(self.consultancy, 'name') else 'Unknown'} - {self.job.title}"
 
 
+
+class CandidateSubmission(models.Model):
+    bid = models.ForeignKey(Bid, on_delete=models.CASCADE, related_name='candidate_submissions')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.bid.consultancy.name if hasattr(self.bid.consultancy, 'name') else 'Unknown'} - {self.bid.job.title}"
+
+class Resume(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('shortlisted', 'Shortlisted'),
+        ('assessment', 'Assessment'),
+        ('phone_screen', 'Phone Screen'),
+        ('interview', 'Interview Scheduled'),
+        ('technical_interview', 'Technical Interview'),
+        ('hr_interview', 'HR Interview'),
+        ('reference_check', 'Reference Check'),
+        ('background_check', 'Background Check'),
+        ('offer_pending', 'Offer Pending'),
+        ('offer_extended', 'Offer Extended'),
+        ('offer_accepted', 'Offer Accepted'),
+        ('offer_declined', 'Offer Declined'),
+        ('onboarding', 'Onboarding'),
+        ('hired', 'Hired'),
+        ('rejected', 'Rejected'),
+        ('withdrawn', 'Withdrawn'),
+        ('on_hold', 'On Hold'),
+    ]
+    candidate_submission = models.ForeignKey(
+        CandidateSubmission, 
+        on_delete=models.CASCADE,
+        related_name='resumes'
+    )
+    name = models.CharField(max_length=200, default='')
+    resume = models.URLField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.resume
+
 class DirectApplication(models.Model):
     STATUS_CHOICES = [
         ('applied', 'Applied'),

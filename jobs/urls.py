@@ -14,4 +14,9 @@ urlpatterns = [
     path('update-bid/<int:pk>/', views.update_bid, name='update-bid'),
     path('delete-bid/<int:pk>/', views.delete_bid, name='delete-bid'),
     path('consultancy-profile/<int:pk>/', views.get_consultancy_profile, name='consultancy-profile'),
+    path('submit-candidates/', views.submit_candidates, name='submit-candidates'),
+    path('upload-resume/', views.upload_resume, name='upload-resume'),
+    path('candidate-submissions/<int:pk>/', views.get_candidate_submissions, name='candidate-submissions'),
+    path('candidate-submissions-by-employer/<int:pk>/', views.get_candidate_submissions_by_employer, name='candidate-submissions-by-employer'),
+    path('update-candidate-submission/<int:pk>/<int:resume_id>/', views.update_candidate_submission, name='update-candidate-submission'),
 ]
