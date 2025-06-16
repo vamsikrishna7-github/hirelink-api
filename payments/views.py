@@ -6,9 +6,11 @@ import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import Payment
-from jobs.models import Bid
+from jobs.models import Bid, JobPost
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from jobs.utils import generate_agreement_pdf
+from .utils import send_payment_receipt_email_async
 
 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
@@ -21,6 +23,40 @@ def create_order(request):
         
         # Get the bid and verify it exists
         bid = get_object_or_404(Bid, id=bid_id)
+            
+            
+        bids_with_successful_payments = Bid.objects.filter(
+            job=bid.job
+        ).prefetch_related('payment_set').distinct()
+
+        # Filter bids that have successful payments
+        successful_bids = []
+        for bid in bids_with_successful_payments:
+            payments = bid.payment_set.filter(status__in=['paid', 'authorized'])
+            if payments.exists():
+                successful_bids.append({
+                    'bid_id': bid.id,
+                    'payment': {
+                        'status': payments.first().status,
+                        'amount': payments.first().amount,
+                        'currency': payments.first().currency,
+                        'order_id': payments.first().order_id,
+                        'payment_id': payments.first().payment_id,
+                        'signature': payments.first().signature
+                    }
+                })
+        if successful_bids:
+            # Generate agreement PDF and get URL
+            agreement_url = generate_agreement_pdf(bid.id)
+            
+            # Refresh bid from database to get updated fields
+            bid.refresh_from_db()
+            bid.status = 'approved'
+            bid.save()
+            return JsonResponse({
+                'status': 'approved',
+                'message': 'Payment already exists for this job'
+            }, status=status.HTTP_200_OK)
         
         # Check if payment already exists for this bid
         if Payment.objects.filter(bid=bid, status__in=['paid', 'authorized']).exists():
@@ -32,14 +68,14 @@ def create_order(request):
         payment = Payment.objects.create(
             user=request.user,
             bid=bid,
-            amount=float(bid.fee/100*30),
+            amount=float(bid.job.bid_budget/100*30),
             currency='INR',
             status='created'
         )
         
         # Create Razorpay order
         razorpay_order = client.order.create({
-            'amount': int(float(bid.fee/100*30) * 100),  # Convert to paise
+            'amount': int(float(bid.job.bid_budget/100*30) * 100),  # Convert to paise
             'currency': 'INR',
             'payment_capture': 1,
             'notes': {
@@ -92,6 +128,18 @@ def verify_payment(request):
             payment.signature = razorpay_signature
             payment.status = 'paid'
             payment.save()
+            
+            bid = get_object_or_404(Bid, id=payment.bid.id)
+            # Generate agreement PDF and get URL
+            agreement_url = generate_agreement_pdf(bid.id)
+            
+            # Refresh bid from database to get updated fields
+            bid.refresh_from_db()
+            bid.status = 'approved'
+            bid.save()
+            
+            # Send payment receipt email
+            send_payment_receipt_email_async(payment)
             
             return JsonResponse({
                 'status': 'success',
@@ -162,3 +210,52 @@ def webhook(request):
     return JsonResponse({
         'error': 'Invalid request method'
     }, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_payment_details(request, job_id):
+    try:
+        job_instance = get_object_or_404(JobPost, id=job_id)
+        
+        if job_instance.posted_by != request.user:
+            return JsonResponse({
+                'error': 'You are not authorized to view this payment'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # Get all bids related to that job where payment status is 'paid' or 'authorized'
+        bids_with_successful_payments = Bid.objects.filter(
+            job=job_instance
+        ).prefetch_related('payment_set').distinct()
+
+        # Filter bids that have successful payments
+        successful_bids = []
+        for bid in bids_with_successful_payments:
+            payments = bid.payment_set.filter(status__in=['paid', 'authorized'])
+            if payments.exists():
+                successful_bids.append({
+                    'bid_id': bid.id,
+                    'payment': {
+                        'status': payments.first().status,
+                        'amount': payments.first().amount,
+                        'currency': payments.first().currency,
+                        'order_id': payments.first().order_id,
+                        'payment_id': payments.first().payment_id,
+                        'signature': payments.first().signature
+                    }
+                })
+
+        if successful_bids:
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Payments found',
+                'payments': successful_bids
+            })
+        else:
+            return JsonResponse({
+                'error': 'No successful payments found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)

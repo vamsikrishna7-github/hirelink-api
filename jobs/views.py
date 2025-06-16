@@ -155,6 +155,7 @@ class BidViewSet(viewsets.ModelViewSet):
             # Refresh bid from database to get updated fields
             bid.refresh_from_db()
             
+            
             # Update bid status and save
             bid.status = 'approved'
             bid.save()
