@@ -163,6 +163,9 @@ class Resume(models.Model):
         ('phone_screen', 'Phone Screen'),
         ('interview', 'Interview Scheduled'),
         ('technical_interview', 'Technical Interview'),
+        ('l1_interview', 'L1 Interview'),
+        ('l2_interview', 'L2 Interview'),
+        ('l3_interview', 'L3 Interview'),
         ('hr_interview', 'HR Interview'),
         ('reference_check', 'Reference Check'),
         ('background_check', 'Background Check'),
@@ -176,6 +179,7 @@ class Resume(models.Model):
         ('withdrawn', 'Withdrawn'),
         ('on_hold', 'On Hold'),
     ]
+    
     candidate_submission = models.ForeignKey(
         CandidateSubmission, 
         on_delete=models.CASCADE,
@@ -184,6 +188,7 @@ class Resume(models.Model):
     name = models.CharField(max_length=200, default='')
     resume = models.URLField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    rejection_reason = models.TextField(blank=True, null=True, help_text="Reason for rejection if status is rejected")
     
     created_at = models.DateTimeField(auto_now_add=True)
 

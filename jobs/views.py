@@ -560,7 +560,10 @@ def update_candidate_submission(request, pk, resume_id):
         )
     if 'status' in request.data:
         resume.status = request.data['status']
+        resume.rejection_reason = request.data['rejection_reason'] or None
         resume.save()
+        if request.data['status'] == 'hired':
+            pass #send payment link via email
         return Response(ResumeSerializer(resume).data)
     else:
         return Response(

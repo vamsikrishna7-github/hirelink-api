@@ -11,6 +11,10 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from jobs.utils import generate_agreement_pdf
 from .utils import send_payment_receipt_email_async
+from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from .serializers import PaymentSerializer
 
 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
@@ -47,14 +51,15 @@ def create_order(request):
                 })
         if successful_bids:
             # Generate agreement PDF and get URL
-            agreement_url = generate_agreement_pdf(bid.id)
+            agreement_url = generate_agreement_pdf(bid_id)
             
-            # Refresh bid from database to get updated fields
-            bid.refresh_from_db()
-            bid.status = 'approved'
-            bid.save()
+            # Update bid status to approved
+            bid_instance = Bid.objects.get(id=bid_id)
+            bid_instance.status = 'approved'
+            bid_instance.save()
+            
             return JsonResponse({
-                'status': 'approved',
+                'status': bid_instance.status,
                 'message': 'Payment already exists for this job'
             }, status=status.HTTP_200_OK)
         
@@ -67,20 +72,20 @@ def create_order(request):
         # Create payment record
         payment = Payment.objects.create(
             user=request.user,
-            bid=bid,
-            amount=float(bid.job.bid_budget/100*30),
+            bid=Bid.objects.get(id=bid_id),
+            amount=float(Bid.objects.get(id=bid_id).job.bid_budget/100*30),
             currency='INR',
             status='created'
         )
         
         # Create Razorpay order
         razorpay_order = client.order.create({
-            'amount': int(float(bid.job.bid_budget/100*30) * 100),  # Convert to paise
+            'amount': int(float(Bid.objects.get(id=bid_id).job.bid_budget/100*30) * 100),  # Convert to paise
             'currency': 'INR',
             'payment_capture': 1,
             'notes': {
                 'payment_id': str(payment.id),
-                'bid_id': str(bid.id)
+                'bid_id': str(Bid.objects.get(id=bid_id).id)
             }
         })
         
@@ -129,7 +134,7 @@ def verify_payment(request):
             payment.status = 'paid'
             payment.save()
             
-            bid = get_object_or_404(Bid, id=payment.bid.id)
+            bid = Bid.objects.get(id=payment.bid.id)
             # Generate agreement PDF and get URL
             agreement_url = generate_agreement_pdf(bid.id)
             
@@ -259,3 +264,16 @@ def get_payment_details(request, job_id):
         return JsonResponse({
             'error': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    serializer_class = PaymentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Payment.objects.filter(user=self.request.user).order_by('-created_at')
+
+    @action(detail=False, methods=['get'])
+    def history(self, request):
+        payments = self.get_queryset()
+        serializer = self.get_serializer(payments, many=True)
+        return Response(serializer.data)
