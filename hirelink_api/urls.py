@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/', include('help.urls')),
     path('api/', include('settings.urls')),
     path('api/', include('payments.urls')),
+    path('api/', include('subscriptions.urls')),
 
     #health check
     path('health/', health_check, name='health_check'),
