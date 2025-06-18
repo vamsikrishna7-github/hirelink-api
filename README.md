@@ -828,3 +828,60 @@ Save the following content as `hirelink-api-environment.json`:
 - Update the environment variables as needed
 - All endpoints include trailing slashes to avoid Django's APPEND_SLASH issues
 - For file uploads, you'll need to select the actual file in Postman before sending the request
+
+#
+# -----------------------------
+# Automated Deactivation of Expired Subscriptions
+# -----------------------------
+
+## Automating Subscription Expiry with Cron
+
+To ensure that expired user subscriptions are automatically deactivated, you can schedule a cron job to run the management command `deactivate_expired_subscriptions` at regular intervals.
+
+### 1. Locate Your Python Path
+
+If you are using a virtual environment, your Python path will look like:
+```
+/media/mrx/projects/Hirelink/django/hirelink-api/venv/bin/python
+```
+
+### 2. Open Your Crontab
+
+Run the following command in your terminal:
+```
+crontab -e
+```
+This opens your user's crontab file for editing.
+
+### 3. Add the Cron Job
+
+#### For Testing (every 3 minutes):
+```
+*/3 * * * * cd /media/mrx/projects/Hirelink/django/hirelink-api && /media/mrx/projects/Hirelink/django/hirelink-api/venv/bin/python manage.py deactivate_expired_subscriptions >> /tmp/deactivate_subs.log 2>&1
+```
+
+#### For Production (every 1 hour):
+```
+0 * * * * cd /media/mrx/projects/Hirelink/django/hirelink-api && /media/mrx/projects/Hirelink/django/hirelink-api/venv/bin/python manage.py deactivate_expired_subscriptions >> /tmp/deactivate_subs.log 2>&1
+```
+
+- The `>> /tmp/deactivate_subs.log 2>&1` part appends all output (including errors) to a log file for debugging.
+- You can comment/uncomment the appropriate line to switch between testing and production intervals.
+
+### 4. Save and Exit
+- Save the file and exit the editor. The cron job will now run at the specified interval.
+
+### 5. Check the Log
+- To view the output or errors from the cron job, check the log file:
+```
+tail -f /tmp/deactivate_subs.log
+```
+
+### 6. Manual Run (for testing)
+You can also run the command manually to verify it works:
+```
+cd /media/mrx/projects/Hirelink/django/hirelink-api
+/media/mrx/projects/Hirelink/django/hirelink-api/venv/bin/python manage.py deactivate_expired_subscriptions
+```
+
+---
