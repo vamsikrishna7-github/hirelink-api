@@ -160,7 +160,9 @@ def create_subscription_order(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verify_subscription_payment(request):
-    try:
+    return JsonResponse({'error': 'Payment verification failed'}, status=400)
+    
+    try:        
         data = request.data
         payment_id = data.get('payment_id')
         razorpay_payment_id = data.get('razorpay_payment_id')
