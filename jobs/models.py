@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from accounts.models import User
 from accounts.models import EmployerProfile, ConsultancyProfile, CandidateProfile
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -74,8 +75,6 @@ class JobPost(models.Model):
     def __str__(self):
         return f"{self.title} at {self.company_name}"
 
-from django.core.exceptions import ValidationError
-
 class Bid(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -143,7 +142,6 @@ class Bid(models.Model):
     
     def __str__(self):
         return f"{self.consultancy.name if hasattr(self.consultancy, 'name') else 'Unknown'} - {self.job.title}"
-
 
 
 class CandidateSubmission(models.Model):
@@ -218,7 +216,6 @@ class DirectApplication(models.Model):
     
     def __str__(self):
         return f"{self.candidate.user.name} - {self.job.title}"
-    
 
 class SavedJob(models.Model):
     job = models.ForeignKey(JobPost, on_delete=models.CASCADE, related_name='saved_jobs')

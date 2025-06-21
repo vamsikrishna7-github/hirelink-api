@@ -15,6 +15,8 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import PaymentSerializer
+from subscriptions.models import UserSubscriptionPayments
+from subscriptions.serializers import UserSubscriptionPaymentsSerializer
 
 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
@@ -271,9 +273,19 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Payment.objects.filter(user=self.request.user).order_by('-created_at')
+    
+    def get_subscription_payments(self):
+        return UserSubscriptionPayments.objects.filter(user=self.request.user).order_by('-created_at')
+    
+    def get_subscription_payments_serializer(self):
+        return UserSubscriptionPaymentsSerializer(self.get_subscription_payments(), many=True)
 
     @action(detail=False, methods=['get'])
     def history(self, request):
         payments = self.get_queryset()
         serializer = self.get_serializer(payments, many=True)
-        return Response(serializer.data)
+        subscription_payments_serializer = self.get_subscription_payments_serializer()
+        return Response({
+            'payments': serializer.data,
+            'subscription_payments': subscription_payments_serializer.data
+        })

@@ -33,8 +33,8 @@ class SubscriptionPlan(models.Model):
 class UserSubscription(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True)
-    job_limit = models.BigIntegerField(default=int(0))
-    bid_limit = models.BigIntegerField(default=int(0))
+    job_limit = models.BigIntegerField(default=0)
+    bid_limit = models.BigIntegerField(default=0)
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(blank=True, null=True)
     active = models.BooleanField(null=False)
@@ -51,20 +51,21 @@ class UserSubscription(models.Model):
         return f"{self.user} - {self.plan} - {'Active' if self.active else 'Inactive'}"
 
     def save(self, *args, **kwargs):
-        """Assign job_limit and bid_limit from plan.description on save."""
-        description = getattr(self.plan, 'description', {}) or {}
-        # Set job_limit
-        job_posts = description.get('job_posts')
-        if job_posts == 'unlimited':
-            self.job_limit = sys.maxsize
-        elif isinstance(job_posts, int):
-            self.job_limit = job_posts
-        # Set bid_limit
-        consultancy_bids = description.get('consultancy_bids')
-        if consultancy_bids == 'unlimited':
-            self.bid_limit = sys.maxsize
-        elif isinstance(consultancy_bids, int):
-            self.bid_limit = consultancy_bids
+        # Only set limits from plan on creation
+        if self._state.adding:
+            description = getattr(self.plan, 'description', {}) or {}
+            # Set job_limit
+            job_posts = description.get('job_posts')
+            if job_posts == 'unlimited':
+                self.job_limit = sys.maxsize
+            elif isinstance(job_posts, int):
+                self.job_limit = job_posts
+            # Set bid_limit
+            consultancy_bids = description.get('consultancy_bids')
+            if consultancy_bids == 'unlimited':
+                self.bid_limit = sys.maxsize
+            elif isinstance(consultancy_bids, int):
+                self.bid_limit = consultancy_bids
         super().save(*args, **kwargs)
 
 

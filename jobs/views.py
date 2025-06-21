@@ -22,6 +22,7 @@ from django.core.files.uploadedfile import UploadedFile
 import mimetypes
 from cloudinary.uploader import upload as cloudinary_upload
 from rest_framework.parsers import MultiPartParser, FormParser
+from subscriptions.models import UserSubscription
 
 class JobPostFilter(filters.FilterSet):
     min_salary = filters.NumberFilter(field_name="min_salary", lookup_expr='gte')
@@ -53,7 +54,16 @@ class JobPostViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
     
     def perform_create(self, serializer):
-        serializer.save(posted_by=self.request.user)
+        user = self.request.user
+        subscription = UserSubscription.objects.filter(user=user, active=True).first()
+        print(subscription.job_limit, 'job limit and create job before')
+        if not subscription or subscription.job_limit <= 0:
+            raise ValidationError({'detail': 'Your job posting usage is completed. Please upgrade your plan.'})
+        instance = serializer.save(posted_by=user)
+        subscription.job_limit -= 1
+        subscription.save(update_fields=["job_limit"])
+        print(subscription.job_limit, 'job limit and create job after')
+        return instance
     
     def get_queryset(self):
         """
@@ -126,7 +136,16 @@ class BidViewSet(viewsets.ModelViewSet):
             )
     
     def perform_create(self, serializer):
-        serializer.save(consultancy=self.request.user.consultancy_profile)
+        consultancy = self.request.user.consultancy_profile
+        user = consultancy.user
+        subscription = UserSubscription.objects.filter(user=user, active=True).first()
+        print(subscription.bid_limit, 'bid limit and create bid before')
+        if not subscription or subscription.bid_limit <= 0:
+            raise ValidationError({'detail': 'Your bid usage is completed. Please upgrade your plan.'})
+        instance = serializer.save(consultancy=consultancy)
+        subscription.bid_limit -= 1
+        subscription.save(update_fields=["bid_limit"])
+        return instance
     
     def update(self, request, *args, **kwargs):
         # Only allow employers to update bid status
